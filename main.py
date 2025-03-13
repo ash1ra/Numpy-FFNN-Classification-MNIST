@@ -27,8 +27,19 @@ def get_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     return x_train, y_train, x_test, y_test
 
 
+def init_params() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    w1 = np.random.rand(10, 784)
+    b1 = np.random.rand(10, 10)
+
+    w2 = np.random.rand(10, 10)
+    b2 = np.random.rand(10, 10)
+
+    return w1, b1, w2, b2
+
+
 def main():
     x_train, y_train, x_test, y_test = get_data()
+    w1, b1, w2, b2 = init_params()
 
 
 if __name__ == "__main__":
