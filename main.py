@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 
 TEST_DATA_SPLIT = 2000
+EPS = 1e-15
 
 
 def one_hot_encoding(y: np.ndarray) -> np.ndarray:
     one_hot_y = np.zeros((y.size, np.max(y) + 1))
     for one_hot_y_element, y_index in zip(one_hot_y, y):
         one_hot_y_element[y_index] = 1
-    return one_hot_y
+    return one_hot_y.T
 
 
 def get_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -42,13 +43,12 @@ def relu(z: np.ndarray) -> np.ndarray:
 
 
 def relu_derivative(z: np.ndarray) -> np.ndarray:
-    return z >= 0
+    return z > 0
 
 
-# NOTE: change axis to 1 for using batches
 def softmax(z: np.ndarray) -> np.ndarray:
-    exps = np.exp(z - z.max(axis=0, keepdims=True))
-    return exps / np.sum(exps, axis=0, keepdims=True)
+    exps = np.exp(z - z.max(axis=-1, keepdims=True))
+    return exps / np.sum(exps, axis=-1, keepdims=True)
 
 
 def softmax_derivative(z: np.ndarray) -> np.ndarray: ...
@@ -68,8 +68,8 @@ def forward_prop(
     return a2
 
 
-def cross_entropy(y: np.ndarray, y_pred: np.ndarray):
-    return -np.sum(y * np.log(y_pred))
+def cross_entropy(y: np.ndarray, y_pred: np.ndarray) -> np.float64:
+    return (-np.sum(y * np.log(y_pred + EPS))) / y.shape[-1]
 
 
 def main():
