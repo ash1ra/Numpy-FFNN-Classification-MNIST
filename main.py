@@ -12,18 +12,18 @@ def one_hot_encoding(y: np.ndarray) -> np.ndarray:
     one_hot_y = np.zeros((y.size, np.max(y) + 1))
     for one_hot_y_element, y_index in zip(one_hot_y, y):
         one_hot_y_element[y_index] = 1
-    return one_hot_y.T
+    return one_hot_y
 
 
 def get_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     data = pd.read_csv("data/train.csv").to_numpy()
     np.random.shuffle(data)
 
-    train_data = data[TEST_DATA_SPLIT:].T
-    test_data = data[:TEST_DATA_SPLIT].T
+    train_data = data[TEST_DATA_SPLIT:]
+    test_data = data[:TEST_DATA_SPLIT]
 
-    x_train, y_train = train_data[1:] / 255, train_data[0]
-    x_test, y_test = test_data[1:] / 255, test_data[0]
+    x_train, y_train = train_data[:, 1:] / 255, train_data[:, 0]
+    x_test, y_test = test_data[:, 1:] / 255, test_data[:, 0]
 
     y_train = one_hot_encoding(y_train)
     y_test = one_hot_encoding(y_test)
@@ -32,11 +32,11 @@ def get_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
 
 def init_params() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    w1 = np.random.randn(10, 784) * np.sqrt(2 / 784)
-    b1 = np.zeros((10, 1))
+    w1 = np.random.randn(784, 10) * np.sqrt(2 / 784)
+    b1 = np.zeros((1, 10))
 
     w2 = np.random.randn(10, 10) * np.sqrt(2 / 10)
-    b2 = np.zeros((10, 1))
+    b2 = np.zeros((1, 10))
 
     return w1, b1, w2, b2
 
@@ -59,28 +59,28 @@ def forward_prop(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     w1, b1, w2, b2 = params
 
-    z1 = np.matmul(w1, x) + b1
+    z1 = np.matmul(x, w1) + b1
     a1 = relu(z1)
 
-    z2 = np.matmul(w2, a1) + b2
+    z2 = np.matmul(a1, w2) + b2
     a2 = softmax(z2)
 
     return z1, a1, z2, a2
 
 
 def cross_entropy(y: np.ndarray, y_pred: np.ndarray) -> np.float64:
-    return (-np.sum(y * np.log(y_pred + EPS))) / y.shape[-1]
+    return (-np.sum(y * np.log(y_pred + EPS))) / y.shape[0]
 
 
 def backward_prop(x, y, a2, a1, w2, z1):
     dz2 = a2 - y
-    dw2 = np.matmul(dz2, a1.T) / BATCH_SIZE
-    db2 = np.sum(dz2, axis=-1, keepdims=True) / BATCH_SIZE
+    dw2 = np.matmul(dz2.T, a1) / BATCH_SIZE
+    db2 = np.sum(dz2, axis=0, keepdims=True) / BATCH_SIZE
 
-    da1 = np.matmul(w2.T, dz2)
-    dz1 = da1 * relu_derivative(z1)
-    dw1 = np.matmul(dz1, x.T) / BATCH_SIZE
-    db1 = np.sum(dz1, axis=-1, keepdims=True) / BATCH_SIZE
+    da1 = np.matmul(w2, dz2.T)
+    dz1 = da1.T * relu_derivative(z1)
+    dw1 = np.matmul(x.T, dz1) / BATCH_SIZE
+    db1 = np.sum(dz1, axis=0, keepdims=True) / BATCH_SIZE
 
     return dw1, db1, dw2, db2
 
@@ -96,7 +96,7 @@ def gradient_descent(w1, b1, w2, b2, dw1, db1, dw2, db2):
 
 def main():
     x_train, y_train, x_test, y_test = get_data()
-    TOTAL_SAMPLES = x_train.shape[-1]
+    TOTAL_SAMPLES = x_train.shape[0]
     w1, b1, w2, b2 = init_params()
 
     for epoch in range(EPOCHS):
@@ -105,15 +105,15 @@ def main():
         num_batches = 0
         while end_idx < TOTAL_SAMPLES:
             z1, a1, z2, a2 = forward_prop(
-                x_train[:, start_idx:end_idx], (w1, b1, w2, b2)
+                x_train[start_idx:end_idx, :], (w1, b1, w2, b2)
             )
 
-            loss = cross_entropy(y_train[:, start_idx:end_idx], a2)
+            loss = cross_entropy(y_train[start_idx:end_idx, :], a2)
             loss_per_epoch += loss
 
             dw1, db1, dw2, db2 = backward_prop(
-                x_train[:, start_idx:end_idx],
-                y_train[:, start_idx:end_idx],
+                x_train[start_idx:end_idx, :],
+                y_train[start_idx:end_idx, :],
                 a2,
                 a1,
                 w2,
