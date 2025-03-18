@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 TEST_DATA_SPLIT = 2000
-LEARNING_RATE = 0.001
-EPOCHS = 20
+LEARNING_RATE = 0.01
+EPOCHS = 100
 BATCH_SIZE = 250
 EPS = 1e-15
 
@@ -94,11 +94,8 @@ def gradient_descent(w1, b1, w2, b2, dw1, db1, dw2, db2):
     return w1, b1, w2, b2
 
 
-def main():
-    x_train, y_train, x_test, y_test = get_data()
+def train_model(x_train, y_train, w1, b1, w2, b2):
     TOTAL_SAMPLES = x_train.shape[0]
-    w1, b1, w2, b2 = init_params()
-
     for epoch in range(EPOCHS):
         start_idx, end_idx = 0, BATCH_SIZE
         loss_per_epoch = 0
@@ -126,6 +123,14 @@ def main():
             num_batches += 1
 
         print(f"Epoch: {epoch + 1} | Loss: {loss_per_epoch / num_batches}")
+
+    return w1, b1, w2, b2
+
+
+def main():
+    x_train, y_train, x_test, y_test = get_data()
+    w1, b1, w2, b2 = init_params()
+    w1, b1, w2, b2 = train_model(x_train, y_train, w1, b1, w2, b2)
 
 
 if __name__ == "__main__":
