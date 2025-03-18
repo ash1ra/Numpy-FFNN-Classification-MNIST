@@ -107,7 +107,7 @@ def train_model(x_train, y_train, w1, b1, w2, b2):
         start_idx, end_idx = 0, BATCH_SIZE
         loss_per_epoch, accuracy_per_epoch = 0, 0
         num_batches = 0
-        while end_idx < TOTAL_TRAIN_SAMPLES:
+        while start_idx < TOTAL_TRAIN_SAMPLES:
             z1, a1, z2, a2 = forward_prop(
                 x_train[start_idx:end_idx, :], (w1, b1, w2, b2)
             )
