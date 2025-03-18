@@ -94,19 +94,26 @@ def gradient_descent(w1, b1, w2, b2, dw1, db1, dw2, db2):
     return w1, b1, w2, b2
 
 
+def calc_accuracy(y_true: np.ndarray, y_preds: np.ndarray) -> np.float64:
+    true_labels = np.argmax(y_true, axis=1)
+    predictions = np.argmax(y_preds, axis=1)
+    accuracy = np.mean(true_labels == predictions)
+    return accuracy
+
+
 def train_model(x_train, y_train, w1, b1, w2, b2):
-    TOTAL_SAMPLES = x_train.shape[0]
+    TOTAL_TRAIN_SAMPLES = x_train.shape[0]
     for epoch in range(EPOCHS):
         start_idx, end_idx = 0, BATCH_SIZE
-        loss_per_epoch = 0
+        loss_per_epoch, accuracy_per_epoch = 0, 0
         num_batches = 0
-        while end_idx < TOTAL_SAMPLES:
+        while end_idx < TOTAL_TRAIN_SAMPLES:
             z1, a1, z2, a2 = forward_prop(
                 x_train[start_idx:end_idx, :], (w1, b1, w2, b2)
             )
 
-            loss = cross_entropy(y_train[start_idx:end_idx, :], a2)
-            loss_per_epoch += loss
+            loss_per_epoch += cross_entropy(y_train[start_idx:end_idx, :], a2)
+            accuracy_per_epoch += calc_accuracy(y_train[start_idx:end_idx, :], a2)
 
             dw1, db1, dw2, db2 = backward_prop(
                 x_train[start_idx:end_idx, :],
@@ -119,18 +126,32 @@ def train_model(x_train, y_train, w1, b1, w2, b2):
             w1, b1, w2, b2 = gradient_descent(w1, b1, w2, b2, dw1, db1, dw2, db2)
 
             start_idx += BATCH_SIZE
-            end_idx = min(end_idx + BATCH_SIZE, TOTAL_SAMPLES)
+            end_idx = min(end_idx + BATCH_SIZE, TOTAL_TRAIN_SAMPLES)
             num_batches += 1
 
-        print(f"Epoch: {epoch + 1} | Loss: {loss_per_epoch / num_batches}")
+        loss_per_epoch /= num_batches
+        accuracy_per_epoch /= num_batches
+
+        print(
+            f"Epoch: {epoch + 1} | Loss: {loss_per_epoch:.4f} | Accuracy: {(accuracy_per_epoch * 100):.2f}%"
+        )
 
     return w1, b1, w2, b2
+
+
+def test_model(x_test, y_test, w1, b1, w2, b2):
+    _, _, _, a2 = forward_prop(x_test, (w1, b1, w2, b2))
+    loss = cross_entropy(y_test, a2)
+    accuracy = calc_accuracy(y_test, a2)
+
+    print(f"Test loss: {loss:.4f} | Test accuracy: {(accuracy * 100):.2f}%")
 
 
 def main():
     x_train, y_train, x_test, y_test = get_data()
     w1, b1, w2, b2 = init_params()
     w1, b1, w2, b2 = train_model(x_train, y_train, w1, b1, w2, b2)
+    test_model(x_test, y_test, w1, b1, w2, b2)
 
 
 if __name__ == "__main__":
