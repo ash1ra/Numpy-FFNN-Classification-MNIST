@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import logging
 from dataclasses import dataclass
 
 TEST_DATA_SPLIT = 2000
@@ -8,6 +9,7 @@ LEARNING_RATE = 0.01
 EPOCHS = 100
 BATCH_SIZE = 250
 EPS = 1e-15
+LOGGER_LEVEL = logging.INFO
 
 
 @dataclass
@@ -24,6 +26,17 @@ class Grads:
     db1: np.ndarray
     dw2: np.ndarray
     db2: np.ndarray
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGER_LEVEL)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(LOGGER_LEVEL)
+formatter = logging.Formatter(
+    "%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S"
+)
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 
 def one_hot_encoding(y: np.ndarray) -> np.ndarray:
@@ -149,7 +162,7 @@ def train_model(x_train: np.ndarray, y_train: np.ndarray, params: Params) -> Par
         loss_per_epoch /= num_batches
         accuracy_per_epoch /= num_batches
 
-        print(
+        logger.info(
             f"Epoch: {epoch + 1} | Loss: {loss_per_epoch:.4f} | Accuracy: {(accuracy_per_epoch * 100):.2f}%"
         )
 
@@ -161,7 +174,7 @@ def test_model(x_test: np.ndarray, y_test: np.ndarray, params: Params) -> None:
     loss = cross_entropy(y_test, a2)
     accuracy = calc_accuracy(y_test, a2)
 
-    print(f"Test loss: {loss:.4f} | Test accuracy: {(accuracy * 100):.2f}%")
+    logger.info(f"Test loss: {loss:.4f} | Test accuracy: {(accuracy * 100):.2f}%")
 
 
 def main() -> None:
