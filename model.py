@@ -41,6 +41,10 @@ class Activations:
 
 @dataclass
 class ModelData:
+    hidden_neurons_count: int
+    learning_rate: float
+    epochs: int
+    batch_size: int
     train_loss: list = field(default_factory=list)
     train_accuracy: list = field(default_factory=list)
     test_loss: np.float64 = field(default_factory=np.float64)
@@ -55,21 +59,24 @@ class Model:
         epochs: int,
         batch_size: int,
     ) -> None:
-        self.hidden_neurons_count = hidden_neurons_count
-        self.learning_rate = learning_rate
-        self.epochs = epochs
-        self.batch_size = batch_size
+        self.model_data = ModelData(
+            hidden_neurons_count=hidden_neurons_count,
+            learning_rate=learning_rate,
+            epochs=epochs,
+            batch_size=batch_size,
+        )
         self.params = self._init_params()
         self.activations: Activations
         self.grads: Grads
-        self.model_data = ModelData()
 
     def _init_params(self) -> Params:
-        w1 = np.random.randn(784, self.hidden_neurons_count) * np.sqrt(2 / 784)
-        b1 = np.zeros((1, self.hidden_neurons_count))
+        w1 = np.random.randn(784, self.model_data.hidden_neurons_count) * np.sqrt(
+            2 / 784
+        )
+        b1 = np.zeros((1, self.model_data.hidden_neurons_count))
 
-        w2 = np.random.randn(self.hidden_neurons_count, 10) * np.sqrt(
-            2 / self.hidden_neurons_count
+        w2 = np.random.randn(self.model_data.hidden_neurons_count, 10) * np.sqrt(
+            2 / self.model_data.hidden_neurons_count
         )
         b2 = np.zeros((1, 10))
 
@@ -103,21 +110,21 @@ class Model:
         y: np.ndarray,
     ) -> None:
         dz2 = self.activations.a2 - y
-        dw2 = np.matmul(dz2.T, self.activations.a1) / self.batch_size
-        db2 = np.sum(dz2, axis=0, keepdims=True) / self.batch_size
+        dw2 = np.matmul(dz2.T, self.activations.a1) / self.model_data.batch_size
+        db2 = np.sum(dz2, axis=0, keepdims=True) / self.model_data.batch_size
 
         da1 = np.matmul(self.params.w2, dz2.T)
         dz1 = da1.T * self._relu_derivative(self.activations.z1)
-        dw1 = np.matmul(x.T, dz1) / self.batch_size
-        db1 = np.sum(dz1, axis=0, keepdims=True) / self.batch_size
+        dw1 = np.matmul(x.T, dz1) / self.model_data.batch_size
+        db1 = np.sum(dz1, axis=0, keepdims=True) / self.model_data.batch_size
 
         self.grads = Grads(dw1, db1, dw2, db2)
 
     def _gradient_descent(self) -> None:
-        self.params.w1 -= self.learning_rate * self.grads.dw1
-        self.params.b1 -= self.learning_rate * self.grads.db1
-        self.params.w2 -= self.learning_rate * self.grads.dw2
-        self.params.b2 -= self.learning_rate * self.grads.db2
+        self.params.w1 -= self.model_data.learning_rate * self.grads.dw1
+        self.params.b1 -= self.model_data.learning_rate * self.grads.db1
+        self.params.w2 -= self.model_data.learning_rate * self.grads.dw2
+        self.params.b2 -= self.model_data.learning_rate * self.grads.db2
 
     def _calc_accuracy(self, y_true: np.ndarray) -> np.float64:
         true_labels = np.argmax(y_true, axis=1)
@@ -128,7 +135,7 @@ class Model:
     def train_model(self, x_train: np.ndarray, y_train: np.ndarray) -> None:
         train_samples_count = x_train.shape[0]
 
-        for epoch in range(self.epochs):
+        for epoch in range(self.model_data.epochs):
             perm = np.random.permutation(train_samples_count)
             x_train, y_train = x_train[perm], y_train[perm]
 
@@ -137,7 +144,9 @@ class Model:
             num_batches = 0
 
             while start_idx < train_samples_count:
-                end_idx = min(start_idx + self.batch_size, train_samples_count)
+                end_idx = min(
+                    start_idx + self.model_data.batch_size, train_samples_count
+                )
                 x_batch, y_batch = (
                     x_train[start_idx:end_idx],
                     y_train[start_idx:end_idx],
@@ -172,3 +181,25 @@ class Model:
         self.model_data.test_accuracy = accuracy
 
         logger.info(f"Test loss: {loss:.4f} | Test accuracy: {(accuracy * 100):.2f}%")
+
+    def calc_avarage(
+        self,
+        x_train: np.ndarray,
+        y_train: np.ndarray,
+        x_test: np.ndarray,
+        y_test: np.ndarray,
+        count: int,
+    ):
+        avarage_train_loss = 0
+        avarage_train_accuracy = 0
+        avarage_test_loss = 0
+        avarage_test_accuracy = 0
+
+        for _ in range(count):
+            self.train_model(x_train, y_train)
+            self.test_model(x_test, y_test)
+
+            if avarage_train_loss:
+                ...
+            else:
+                avarage_train_loss = self.model_data.train_loss
