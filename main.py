@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from model import Model
+from plots import plot_train_loss_and_accuracy
 
 TEST_DATA_SPLIT = 2000
 
@@ -28,11 +29,17 @@ def get_data() -> tuple[np.ndarray, ...]:
 
 def main() -> None:
     x_train, y_train, x_test, y_test = get_data()
-    model = Model(
-        hidden_neurons_count=10, learning_rate=0.01, epochs=100, batch_size=250
+
+    model1 = Model(
+        hidden_neurons_count=10, learning_rate=0.0001, epochs=100, batch_size=250
     )
-    model.train_model(x_train, y_train)
-    model.test_model(x_test, y_test)
+    model1.train_model(x_train, y_train)
+    model1.test_model(x_test, y_test)
+
+    plot_train_loss_and_accuracy(
+        (model1.model_data,),
+        "learning_rate",
+    )
 
 
 if __name__ == "__main__":
