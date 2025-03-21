@@ -196,6 +196,8 @@ class Model:
         all_test_accuracies = []
 
         for i in range(count):
+            logger.info(f"Run {i + 1}/{count}")
+
             self.params = self._init_params()
             self.model_data.train_loss = []
             self.model_data.train_accuracy = []
@@ -207,8 +209,6 @@ class Model:
             all_train_accuracies.append(self.model_data.train_accuracy)
             all_test_losses.append(self.model_data.test_loss)
             all_test_accuracies.append(self.model_data.test_accuracy)
-
-            logger.info(f"Run {i + 1}/{count} completed\n")
 
         avg_train_loss = np.mean(np.array(all_train_losses), axis=0).tolist()
         avg_train_accuracy = np.mean(np.array(all_train_accuracies), axis=0).tolist()
