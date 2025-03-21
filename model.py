@@ -180,7 +180,7 @@ class Model:
         self.model_data.test_loss = loss
         self.model_data.test_accuracy = accuracy
 
-        logger.info(f"Test loss: {loss:.4f} | Test accuracy: {(accuracy * 100):.2f}%")
+        logger.info(f"Test loss: {loss:.4f} | Test accuracy: {(accuracy * 100):.2f}%\n")
 
     def calc_avarage(
         self,
@@ -189,17 +189,42 @@ class Model:
         x_test: np.ndarray,
         y_test: np.ndarray,
         count: int,
-    ):
-        avarage_train_loss = 0
-        avarage_train_accuracy = 0
-        avarage_test_loss = 0
-        avarage_test_accuracy = 0
+    ) -> None:
+        all_train_losses = []
+        all_train_accuracies = []
+        all_test_losses = []
+        all_test_accuracies = []
 
-        for _ in range(count):
+        for i in range(count):
+            self.params = self._init_params()
+            self.model_data.train_loss = []
+            self.model_data.train_accuracy = []
+
             self.train_model(x_train, y_train)
             self.test_model(x_test, y_test)
 
-            if avarage_train_loss:
-                ...
-            else:
-                avarage_train_loss = self.model_data.train_loss
+            all_train_losses.append(self.model_data.train_loss)
+            all_train_accuracies.append(self.model_data.train_accuracy)
+            all_test_losses.append(self.model_data.test_loss)
+            all_test_accuracies.append(self.model_data.test_accuracy)
+
+            logger.info(f"Run {i + 1}/{count} completed\n")
+
+        avg_train_loss = np.mean(np.array(all_train_losses), axis=0).tolist()
+        avg_train_accuracy = np.mean(np.array(all_train_accuracies), axis=0).tolist()
+
+        avg_test_loss = np.mean(all_test_losses)
+        avg_test_accuracy = np.mean(all_test_accuracies)
+
+        self.model_data.train_loss = avg_train_loss
+        self.model_data.train_accuracy = avg_train_accuracy
+        self.model_data.test_loss = avg_test_loss
+        self.model_data.test_accuracy = avg_test_accuracy
+
+        logger.info(
+            f"Average results over {count} runs:\n"
+            f"Train loss: {avg_train_loss[-1]:.4f} (last epoch)\n"
+            f"Train accuracy: {(avg_train_accuracy[-1] * 100):.2f}% (last epoch)\n"
+            f"Test loss: {avg_test_loss:.4f}\n"
+            f"Test accuracy: {(avg_test_accuracy * 100):.2f}%\n"
+        )

@@ -33,8 +33,10 @@ def main() -> None:
     model1 = Model(
         hidden_neurons_count=10, learning_rate=0.0001, epochs=100, batch_size=250
     )
-    model1.train_model(x_train, y_train)
-    model1.test_model(x_test, y_test)
+    # model1.train_model(x_train, y_train)
+    # model1.test_model(x_test, y_test)
+
+    model1.calc_avarage(x_train, y_train, x_test, y_test, 5) 
 
     plot_train_loss_and_accuracy(
         (model1.model_data,),
