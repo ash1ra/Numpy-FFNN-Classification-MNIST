@@ -221,10 +221,10 @@ class Model:
         self.model_data.test_loss = avg_test_loss
         self.model_data.test_accuracy = avg_test_accuracy
 
+        logger.info(f"Average results over {count} runs:")
+        logger.info(f"Train loss: {avg_train_loss[-1]:.4f} (last epoch)")
         logger.info(
-            f"Average results over {count} runs:\n"
-            f"Train loss: {avg_train_loss[-1]:.4f} (last epoch)\n"
-            f"Train accuracy: {(avg_train_accuracy[-1] * 100):.2f}% (last epoch)\n"
-            f"Test loss: {avg_test_loss:.4f}\n"
-            f"Test accuracy: {(avg_test_accuracy * 100):.2f}%\n"
+            f"Train accuracy: {(avg_train_accuracy[-1] * 100):.2f}% (last epoch)"
         )
+        logger.info(f"Test loss: {avg_test_loss:.4f}")
+        logger.info(f"Test accuracy: {(avg_test_accuracy * 100):.2f}%")
