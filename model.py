@@ -1,6 +1,7 @@
 import numpy as np
 from dataclasses import dataclass, field
 import logging
+from time import perf_counter
 
 EPS = 1e-15
 LOGGER_LEVEL = logging.INFO
@@ -45,6 +46,7 @@ class ModelData:
     learning_rate: float
     epochs: int
     batch_size: int
+    train_time: float | np.float64 = field(default_factory=float)
     train_loss: list = field(default_factory=list)
     train_accuracy: list = field(default_factory=list)
     test_loss: np.float64 = field(default_factory=np.float64)
@@ -133,6 +135,7 @@ class Model:
         return accuracy
 
     def train_model(self, x_train: np.ndarray, y_train: np.ndarray) -> None:
+        timer_start = perf_counter()
         train_samples_count = x_train.shape[0]
 
         for epoch in range(self.model_data.epochs):
@@ -172,6 +175,8 @@ class Model:
                 f"Epoch: {epoch + 1} | Loss: {loss_per_epoch:.4f} | Accuracy: {(accuracy_per_epoch * 100):.2f}%"
             )
 
+        self.model_data.train_time = perf_counter() - timer_start
+
     def test_model(self, x_test: np.ndarray, y_test: np.ndarray) -> None:
         self._forward_prop(x_test)
         loss = self._cross_entropy(y_test)
@@ -190,6 +195,7 @@ class Model:
         y_test: np.ndarray,
         count: int,
     ) -> None:
+        all_train_times = []
         all_train_losses = []
         all_train_accuracies = []
         all_test_losses = []
@@ -205,10 +211,13 @@ class Model:
             self.train_model(x_train, y_train)
             self.test_model(x_test, y_test)
 
+            all_train_times.append(self.model_data.train_time)
             all_train_losses.append(self.model_data.train_loss)
             all_train_accuracies.append(self.model_data.train_accuracy)
             all_test_losses.append(self.model_data.test_loss)
             all_test_accuracies.append(self.model_data.test_accuracy)
+
+        avg_train_time = np.mean(all_train_times)
 
         avg_train_loss = np.mean(np.array(all_train_losses), axis=0).tolist()
         avg_train_accuracy = np.mean(np.array(all_train_accuracies), axis=0).tolist()
@@ -216,15 +225,19 @@ class Model:
         avg_test_loss = np.mean(all_test_losses)
         avg_test_accuracy = np.mean(all_test_accuracies)
 
+        self.model_data.train_time = avg_train_time
         self.model_data.train_loss = avg_train_loss
         self.model_data.train_accuracy = avg_train_accuracy
         self.model_data.test_loss = avg_test_loss
         self.model_data.test_accuracy = avg_test_accuracy
 
         logger.info(f"Average results over {count} runs:")
+        logger.info(
+            f"Train time: {avg_train_time:.2f}s | Train time per epoch: {(avg_train_time / self.model_data.epochs):.2f}s"
+        )
         logger.info(f"Train loss: {avg_train_loss[-1]:.4f} (last epoch)")
         logger.info(
             f"Train accuracy: {(avg_train_accuracy[-1] * 100):.2f}% (last epoch)"
         )
         logger.info(f"Test loss: {avg_test_loss:.4f}")
-        logger.info(f"Test accuracy: {(avg_test_accuracy * 100):.2f}%")
+        logger.info(f"Test accuracy: {(avg_test_accuracy * 100):.2f}%\n")

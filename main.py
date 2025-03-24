@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from model import Model
-from plots import plot_train_loss_and_accuracy
+import plots
 
 TEST_DATA_SPLIT = 2000
 
@@ -33,13 +33,52 @@ def main() -> None:
     model1 = Model(
         hidden_neurons_count=10, learning_rate=0.0001, epochs=100, batch_size=250
     )
-    # model1.train_model(x_train, y_train)
-    # model1.test_model(x_test, y_test)
 
-    model1.calc_avarage(x_train, y_train, x_test, y_test, 5) 
+    model1.calc_avarage(x_train, y_train, x_test, y_test, 1)
 
-    plot_train_loss_and_accuracy(
-        (model1.model_data,),
+    model2 = Model(
+        hidden_neurons_count=10, learning_rate=0.001, epochs=100, batch_size=250
+    )
+
+    model2.calc_avarage(x_train, y_train, x_test, y_test, 1)
+
+    model3 = Model(
+        hidden_neurons_count=10, learning_rate=0.01, epochs=100, batch_size=250
+    )
+
+    model3.calc_avarage(x_train, y_train, x_test, y_test, 1)
+
+    model4 = Model(
+        hidden_neurons_count=10, learning_rate=0.05, epochs=100, batch_size=250
+    )
+
+    model4.calc_avarage(x_train, y_train, x_test, y_test, 1)
+
+    model5 = Model(
+        hidden_neurons_count=10, learning_rate=0.1, epochs=100, batch_size=250
+    )
+
+    model5.calc_avarage(x_train, y_train, x_test, y_test, 1)
+
+    plots.plot_train_loss_and_accuracy(
+        (
+            model1.model_data,
+            model2.model_data,
+            model3.model_data,
+            model4.model_data,
+            model5.model_data,
+        ),
+        "learning_rate",
+    )
+
+    plots.plot_test_loss_and_accuracy(
+        (
+            model1.model_data,
+            model2.model_data,
+            model3.model_data,
+            model4.model_data,
+            model5.model_data,
+        ),
         "learning_rate",
     )
 
