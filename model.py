@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 import logging
 from time import perf_counter
 
+INPUT_SIZE = 28 * 28
+OUTPUT_SIZE = 10
 EPS = 1e-15
 LOGGER_LEVEL = logging.INFO
 
@@ -41,8 +43,26 @@ class Activations:
 
 
 @dataclass
+class Velocities:
+    v_w1: np.ndarray
+    v_b1: np.ndarray
+    v_w2: np.ndarray
+    v_b2: np.ndarray
+
+
+@dataclass
+class Cache:
+    s_w1: np.ndarray
+    s_b1: np.ndarray
+    s_w2: np.ndarray
+    s_b2: np.ndarray
+
+
+@dataclass
 class ModelData:
     hidden_neurons_count: int
+    hidden_activation_func: str
+    optimizer: str
     learning_rate: float
     epochs: int
     batch_size: int
@@ -57,12 +77,17 @@ class Model:
     def __init__(
         self,
         hidden_neurons_count: int,
+        hidden_activation_func: str,
+        optimizer: str,
         learning_rate: float,
         epochs: int,
         batch_size: int,
     ) -> None:
+        self.t = 0
         self.model_data = ModelData(
             hidden_neurons_count=hidden_neurons_count,
+            hidden_activation_func=hidden_activation_func,
+            optimizer=optimizer,
             learning_rate=learning_rate,
             epochs=epochs,
             batch_size=batch_size,
@@ -71,24 +96,64 @@ class Model:
         self.activations: Activations
         self.grads: Grads
 
+        if optimizer in ["momentum", "nesterov", "adam"]:
+            self.velocities = Velocities(
+                v_w1=np.zeros_like(self.params.w1),
+                v_b1=np.zeros_like(self.params.b1),
+                v_w2=np.zeros_like(self.params.w2),
+                v_b2=np.zeros_like(self.params.b2),
+            )
+
+        if optimizer in ["rmsprop", "adam"]:
+            self.cache = Cache(
+                s_w1=np.zeros_like(self.params.w1),
+                s_b1=np.zeros_like(self.params.b1),
+                s_w2=np.zeros_like(self.params.w2),
+                s_b2=np.zeros_like(self.params.b2),
+            )
+
     def _init_params(self) -> Params:
-        w1 = np.random.randn(784, self.model_data.hidden_neurons_count) * np.sqrt(
-            2 / 784
-        )
+        w1 = np.random.randn(
+            INPUT_SIZE, self.model_data.hidden_neurons_count
+        ) * np.sqrt(2 / INPUT_SIZE)
         b1 = np.zeros((1, self.model_data.hidden_neurons_count))
 
-        w2 = np.random.randn(self.model_data.hidden_neurons_count, 10) * np.sqrt(
-            2 / self.model_data.hidden_neurons_count
-        )
-        b2 = np.zeros((1, 10))
+        w2 = np.random.randn(
+            self.model_data.hidden_neurons_count, OUTPUT_SIZE
+        ) * np.sqrt(2 / self.model_data.hidden_neurons_count)
+        b2 = np.zeros((1, OUTPUT_SIZE))
 
         return Params(w1, b1, w2, b2)
+
+    def _sigmoid(self, z: np.ndarray) -> np.ndarray:
+        return 1 / (1 + np.exp(-z))
+
+    def _sigmoid_derivative(self, z: np.ndarray) -> np.ndarray:
+        return self._sigmoid(z) * (1 - self._sigmoid(z))
+
+    def _tanh(self, z: np.ndarray) -> np.ndarray:
+        return np.tanh(z)
+
+    def _tanh_derivative(self, z: np.ndarray) -> np.ndarray:
+        return 1 - np.power(self._tanh(z), 2)
 
     def _relu(self, z: np.ndarray) -> np.ndarray:
         return np.maximum(0, z)
 
     def _relu_derivative(self, z: np.ndarray) -> np.ndarray:
         return z > 0
+
+    def _leaky_relu(self, z: np.ndarray, alpha: float = 0.01) -> np.ndarray:
+        return np.where(z > 0, z, z * alpha)
+
+    def _leaky_relu_derivative(self, z: np.ndarray, alpha: float = 0.01) -> np.ndarray:
+        return np.where(z > 0, 1, alpha)
+
+    def _elu(self, z: np.ndarray, alpha: float = 1) -> np.ndarray:
+        return np.where(z > 0, z, alpha * (np.exp(z) - 1))
+
+    def _elu_derivative(self, z: np.ndarray, alpha: float = 1) -> np.ndarray:
+        return np.where(z > 0, 1, alpha * np.exp(z))
 
     def _softmax(self, z: np.ndarray) -> np.ndarray:
         exps = np.exp(z - z.max(axis=-1, keepdims=True))
@@ -99,7 +164,7 @@ class Model:
 
     def _forward_prop(self, x: np.ndarray) -> None:
         z1 = np.matmul(x, self.params.w1) + self.params.b1
-        a1 = self._relu(z1)
+        a1 = eval(f"self._{self.model_data.hidden_activation_func}(z1)")
 
         z2 = np.matmul(a1, self.params.w2) + self.params.b2
         a2 = self._softmax(z2)
@@ -116,7 +181,9 @@ class Model:
         db2 = np.sum(dz2, axis=0, keepdims=True) / self.model_data.batch_size
 
         da1 = np.matmul(self.params.w2, dz2.T)
-        dz1 = da1.T * self._relu_derivative(self.activations.z1)
+        dz1 = da1.T * eval(
+            f"self._{self.model_data.hidden_activation_func}_derivative(self.activations.z1)"
+        )
         dw1 = np.matmul(x.T, dz1) / self.model_data.batch_size
         db1 = np.sum(dz1, axis=0, keepdims=True) / self.model_data.batch_size
 
@@ -127,6 +194,151 @@ class Model:
         self.params.b1 -= self.model_data.learning_rate * self.grads.db1
         self.params.w2 -= self.model_data.learning_rate * self.grads.dw2
         self.params.b2 -= self.model_data.learning_rate * self.grads.db2
+
+    def _momentum(self, momentum: float = 0.9) -> None:
+        self.velocities.v_w1 = (
+            momentum * self.velocities.v_w1
+            - self.model_data.learning_rate * self.grads.dw1
+        )
+        self.velocities.v_b1 = (
+            momentum * self.velocities.v_b1
+            - self.model_data.learning_rate * self.grads.db1
+        )
+        self.velocities.v_w2 = (
+            momentum * self.velocities.v_w2
+            - self.model_data.learning_rate * self.grads.dw2
+        )
+        self.velocities.v_b2 = (
+            momentum * self.velocities.v_b2
+            - self.model_data.learning_rate * self.grads.db2
+        )
+
+        self.params.w1 += self.velocities.v_w1
+        self.params.b1 += self.velocities.v_b1
+        self.params.w2 += self.velocities.v_w2
+        self.params.b2 += self.velocities.v_b2
+
+    def _nesterov(self, momentum: float = 0.9) -> None:
+        self.velocities.v_w1 = (
+            momentum * self.velocities.v_w1
+            - self.model_data.learning_rate * self.grads.dw1
+        )
+        self.velocities.v_b1 = (
+            momentum * self.velocities.v_b1
+            - self.model_data.learning_rate * self.grads.db1
+        )
+        self.velocities.v_w2 = (
+            momentum * self.velocities.v_w2
+            - self.model_data.learning_rate * self.grads.dw2
+        )
+        self.velocities.v_b2 = (
+            momentum * self.velocities.v_b2
+            - self.model_data.learning_rate * self.grads.db2
+        )
+
+        self.params.w1 += (
+            momentum * self.velocities.v_w1
+            - self.model_data.learning_rate * self.grads.dw1
+        )
+        self.params.b1 += (
+            momentum * self.velocities.v_b1
+            - self.model_data.learning_rate * self.grads.db1
+        )
+        self.params.w2 += (
+            momentum * self.velocities.v_w2
+            - self.model_data.learning_rate * self.grads.dw2
+        )
+        self.params.b2 += (
+            momentum * self.velocities.v_b2
+            - self.model_data.learning_rate * self.grads.db2
+        )
+
+    def _rmsprop(self, rho: float = 0.9) -> None:
+        self.cache.s_w1 = rho * self.cache.s_w1 + (1 - rho) * (
+            np.power(self.grads.dw1, 2)
+        )
+        self.cache.s_b1 = rho * self.cache.s_b1 + (1 - rho) * (
+            np.power(self.grads.db1, 2)
+        )
+        self.cache.s_w2 = rho * self.cache.s_w2 + (1 - rho) * (
+            np.power(self.grads.dw2, 2)
+        )
+        self.cache.s_b2 = rho * self.cache.s_b2 + (1 - rho) * (
+            np.power(self.grads.db2, 2)
+        )
+
+        self.params.w1 -= (
+            self.model_data.learning_rate
+            * self.grads.dw1
+            / (np.sqrt(self.cache.s_w1) + EPS)
+        )
+        self.params.b1 -= (
+            self.model_data.learning_rate
+            * self.grads.db1
+            / (np.sqrt(self.cache.s_b1) + EPS)
+        )
+        self.params.w2 -= (
+            self.model_data.learning_rate
+            * self.grads.dw2
+            / (np.sqrt(self.cache.s_w2) + EPS)
+        )
+        self.params.b2 -= (
+            self.model_data.learning_rate
+            * self.grads.db2
+            / (np.sqrt(self.cache.s_b2) + EPS)
+        )
+
+    def _adam(self, beta1: float = 0.9, beta2: float = 0.999):
+        self.t += 1
+
+        self.velocities.v_w1 = (
+            beta1 * self.velocities.v_w1 + (1 - beta1) * self.grads.dw1
+        )
+        self.velocities.v_b1 = (
+            beta1 * self.velocities.v_b1 + (1 - beta1) * self.grads.db1
+        )
+        self.velocities.v_w2 = (
+            beta1 * self.velocities.v_w2 + (1 - beta1) * self.grads.dw2
+        )
+        self.velocities.v_b2 = (
+            beta1 * self.velocities.v_b2 + (1 - beta1) * self.grads.db2
+        )
+
+        self.cache.s_w1 = beta2 * self.cache.s_w1 + (1 - beta2) * (
+            np.power(self.grads.dw1, 2)
+        )
+        self.cache.s_b1 = beta2 * self.cache.s_b1 + (1 - beta2) * (
+            np.power(self.grads.db1, 2)
+        )
+        self.cache.s_w2 = beta2 * self.cache.s_w2 + (1 - beta2) * (
+            np.power(self.grads.dw2, 2)
+        )
+        self.cache.s_b2 = beta2 * self.cache.s_b2 + (1 - beta2) * (
+            np.power(self.grads.db2, 2)
+        )
+
+        v_w1_corr = self.velocities.v_w1 / (1 - np.power(beta1, self.t))
+        v_b1_corr = self.velocities.v_b1 / (1 - np.power(beta1, self.t))
+        v_w2_corr = self.velocities.v_w2 / (1 - np.power(beta1, self.t))
+        v_b2_corr = self.velocities.v_b2 / (1 - np.power(beta1, self.t))
+
+        s_w1_corr = self.cache.s_w1 / (1 - np.power(beta2, self.t))
+        s_b1_corr = self.cache.s_b1 / (1 - np.power(beta2, self.t))
+        s_w2_corr = self.cache.s_w2 / (1 - np.power(beta2, self.t))
+        s_b2_corr = self.cache.s_b2 / (1 - np.power(beta2, self.t))
+
+        self.params.w1 -= (
+            self.model_data.learning_rate * v_w1_corr / (np.sqrt(s_w1_corr) + EPS)
+        )
+        self.params.b1 -= (
+            self.model_data.learning_rate * v_b1_corr / (np.sqrt(s_b1_corr) + EPS)
+        )
+        self.params.w2 -= (
+            self.model_data.learning_rate * v_w2_corr / (np.sqrt(s_w2_corr) + EPS)
+        )
+        self.params.b2 -= (
+            self.model_data.learning_rate * v_b2_corr / (np.sqrt(s_b2_corr) + EPS)
+        )
 
     def _calc_accuracy(self, y_true: np.ndarray) -> np.float64:
         true_labels = np.argmax(y_true, axis=1)
@@ -157,7 +369,7 @@ class Model:
 
                 self._forward_prop(x_batch)
                 self._backward_prop(x_batch, y_batch)
-                self._gradient_descent()
+                eval(f"self._{self.model_data.optimizer}()")
 
                 loss_per_epoch += self._cross_entropy(y_batch)
                 accuracy_per_epoch += self._calc_accuracy(y_batch)
@@ -204,7 +416,25 @@ class Model:
         for i in range(count):
             logger.info(f"Run {i + 1}/{count}")
 
+            self.t = 0
             self.params = self._init_params()
+
+            if self.model_data.optimizer in ["momentum", "nesterov", "adam"]:
+                self.velocities = Velocities(
+                    v_w1=np.zeros_like(self.params.w1),
+                    v_b1=np.zeros_like(self.params.b1),
+                    v_w2=np.zeros_like(self.params.w2),
+                    v_b2=np.zeros_like(self.params.b2),
+                )
+
+            if self.model_data.optimizer in ["rmsprop", "adam"]:
+                self.cache = Cache(
+                    s_w1=np.zeros_like(self.params.w1),
+                    s_b1=np.zeros_like(self.params.b1),
+                    s_w2=np.zeros_like(self.params.w2),
+                    s_b2=np.zeros_like(self.params.b2),
+                )
+
             self.model_data.train_loss = []
             self.model_data.train_accuracy = []
 
