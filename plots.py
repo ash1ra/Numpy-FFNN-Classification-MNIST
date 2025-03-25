@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
+
 from model import ModelData
 
 
-def plot_train_loss_and_accuracy(
-    models_data: tuple[ModelData, ...], comparable_attr: str
-) -> None:
+def plot_train_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
     fig, axes = plt.subplots(1, 2)
 
     attrs_to_skip = [
@@ -35,9 +34,7 @@ def plot_train_loss_and_accuracy(
     lines, labels = [], []
     for model_data in models_data:
         comparable_attr_data = eval(f"model_data.{comparable_attr}")
-        label = (
-            f"{comparable_attr.capitalize().replace("_", " ")}: {comparable_attr_data}"
-        )
+        label = f"{comparable_attr.capitalize().replace('_', ' ')}: {comparable_attr_data}"
 
         (line,) = axes[0].plot(model_data.train_loss, label=label)
 
@@ -53,9 +50,7 @@ def plot_train_loss_and_accuracy(
     plt.show()
 
 
-def plot_test_loss_and_accuracy(
-    models_data: tuple[ModelData, ...], comparable_attr: str
-) -> None:
+def plot_test_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
 
     attrs_to_skip = [
@@ -74,9 +69,7 @@ def plot_test_loss_and_accuracy(
             suptitle += f"{formated_attr}: {attr_value} | "
     fig.suptitle(suptitle)
 
-    x_labels = [
-        str(eval(f"model_data.{comparable_attr}")) for model_data in models_data
-    ]
+    x_labels = [str(eval(f"model_data.{comparable_attr}")) for model_data in models_data]
     test_losses = [model_data.test_loss for model_data in models_data]
     test_accuracies = [model_data.test_accuracy for model_data in models_data]
     train_times = [model_data.train_time for model_data in models_data]

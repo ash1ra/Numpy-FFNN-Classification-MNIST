@@ -1,7 +1,8 @@
-import numpy as np
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
 from time import perf_counter
+
+import numpy as np
 
 INPUT_SIZE = 28 * 28
 OUTPUT_SIZE = 10
@@ -13,7 +14,8 @@ logger.setLevel(LOGGER_LEVEL)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(LOGGER_LEVEL)
 formatter = logging.Formatter(
-    "%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S"
+    "%(asctime)s | %(levelname)s | %(message)s",
+    datefmt="%H:%M:%S",
 )
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
@@ -113,14 +115,12 @@ class Model:
             )
 
     def _init_params(self) -> Params:
-        w1 = np.random.randn(
-            INPUT_SIZE, self.model_data.hidden_neurons_count
-        ) * np.sqrt(2 / INPUT_SIZE)
+        w1 = np.random.randn(INPUT_SIZE, self.model_data.hidden_neurons_count) * np.sqrt(2 / INPUT_SIZE)
         b1 = np.zeros((1, self.model_data.hidden_neurons_count))
 
-        w2 = np.random.randn(
-            self.model_data.hidden_neurons_count, OUTPUT_SIZE
-        ) * np.sqrt(2 / self.model_data.hidden_neurons_count)
+        w2 = np.random.randn(self.model_data.hidden_neurons_count, OUTPUT_SIZE) * np.sqrt(
+            2 / self.model_data.hidden_neurons_count
+        )
         b2 = np.zeros((1, OUTPUT_SIZE))
 
         return Params(w1, b1, w2, b2)
@@ -171,19 +171,13 @@ class Model:
 
         self.activations = Activations(z1, a1, a2)
 
-    def _backward_prop(
-        self,
-        x: np.ndarray,
-        y: np.ndarray,
-    ) -> None:
+    def _backward_prop(self, x: np.ndarray, y: np.ndarray) -> None:
         dz2 = self.activations.a2 - y
         dw2 = np.matmul(dz2.T, self.activations.a1) / self.model_data.batch_size
         db2 = np.sum(dz2, axis=0, keepdims=True) / self.model_data.batch_size
 
         da1 = np.matmul(self.params.w2, dz2.T)
-        dz1 = da1.T * eval(
-            f"self._{self.model_data.hidden_activation_func}_derivative(self.activations.z1)"
-        )
+        dz1 = da1.T * eval(f"self._{self.model_data.hidden_activation_func}_derivative(self.activations.z1)")
         dw1 = np.matmul(x.T, dz1) / self.model_data.batch_size
         db1 = np.sum(dz1, axis=0, keepdims=True) / self.model_data.batch_size
 
@@ -196,22 +190,10 @@ class Model:
         self.params.b2 -= self.model_data.learning_rate * self.grads.db2
 
     def _momentum(self, momentum: float = 0.9) -> None:
-        self.velocities.v_w1 = (
-            momentum * self.velocities.v_w1
-            - self.model_data.learning_rate * self.grads.dw1
-        )
-        self.velocities.v_b1 = (
-            momentum * self.velocities.v_b1
-            - self.model_data.learning_rate * self.grads.db1
-        )
-        self.velocities.v_w2 = (
-            momentum * self.velocities.v_w2
-            - self.model_data.learning_rate * self.grads.dw2
-        )
-        self.velocities.v_b2 = (
-            momentum * self.velocities.v_b2
-            - self.model_data.learning_rate * self.grads.db2
-        )
+        self.velocities.v_w1 = momentum * self.velocities.v_w1 - self.model_data.learning_rate * self.grads.dw1
+        self.velocities.v_b1 = momentum * self.velocities.v_b1 - self.model_data.learning_rate * self.grads.db1
+        self.velocities.v_w2 = momentum * self.velocities.v_w2 - self.model_data.learning_rate * self.grads.dw2
+        self.velocities.v_b2 = momentum * self.velocities.v_b2 - self.model_data.learning_rate * self.grads.db2
 
         self.params.w1 += self.velocities.v_w1
         self.params.b1 += self.velocities.v_b1
@@ -219,103 +201,39 @@ class Model:
         self.params.b2 += self.velocities.v_b2
 
     def _nesterov(self, momentum: float = 0.9) -> None:
-        self.velocities.v_w1 = (
-            momentum * self.velocities.v_w1
-            - self.model_data.learning_rate * self.grads.dw1
-        )
-        self.velocities.v_b1 = (
-            momentum * self.velocities.v_b1
-            - self.model_data.learning_rate * self.grads.db1
-        )
-        self.velocities.v_w2 = (
-            momentum * self.velocities.v_w2
-            - self.model_data.learning_rate * self.grads.dw2
-        )
-        self.velocities.v_b2 = (
-            momentum * self.velocities.v_b2
-            - self.model_data.learning_rate * self.grads.db2
-        )
+        self.velocities.v_w1 = momentum * self.velocities.v_w1 - self.model_data.learning_rate * self.grads.dw1
+        self.velocities.v_b1 = momentum * self.velocities.v_b1 - self.model_data.learning_rate * self.grads.db1
+        self.velocities.v_w2 = momentum * self.velocities.v_w2 - self.model_data.learning_rate * self.grads.dw2
+        self.velocities.v_b2 = momentum * self.velocities.v_b2 - self.model_data.learning_rate * self.grads.db2
 
-        self.params.w1 += (
-            momentum * self.velocities.v_w1
-            - self.model_data.learning_rate * self.grads.dw1
-        )
-        self.params.b1 += (
-            momentum * self.velocities.v_b1
-            - self.model_data.learning_rate * self.grads.db1
-        )
-        self.params.w2 += (
-            momentum * self.velocities.v_w2
-            - self.model_data.learning_rate * self.grads.dw2
-        )
-        self.params.b2 += (
-            momentum * self.velocities.v_b2
-            - self.model_data.learning_rate * self.grads.db2
-        )
+        self.params.w1 += momentum * self.velocities.v_w1 - self.model_data.learning_rate * self.grads.dw1
+        self.params.b1 += momentum * self.velocities.v_b1 - self.model_data.learning_rate * self.grads.db1
+        self.params.w2 += momentum * self.velocities.v_w2 - self.model_data.learning_rate * self.grads.dw2
+        self.params.b2 += momentum * self.velocities.v_b2 - self.model_data.learning_rate * self.grads.db2
 
     def _rmsprop(self, rho: float = 0.9) -> None:
-        self.cache.s_w1 = rho * self.cache.s_w1 + (1 - rho) * (
-            np.power(self.grads.dw1, 2)
-        )
-        self.cache.s_b1 = rho * self.cache.s_b1 + (1 - rho) * (
-            np.power(self.grads.db1, 2)
-        )
-        self.cache.s_w2 = rho * self.cache.s_w2 + (1 - rho) * (
-            np.power(self.grads.dw2, 2)
-        )
-        self.cache.s_b2 = rho * self.cache.s_b2 + (1 - rho) * (
-            np.power(self.grads.db2, 2)
-        )
+        self.cache.s_w1 = rho * self.cache.s_w1 + (1 - rho) * (np.power(self.grads.dw1, 2))
+        self.cache.s_b1 = rho * self.cache.s_b1 + (1 - rho) * (np.power(self.grads.db1, 2))
+        self.cache.s_w2 = rho * self.cache.s_w2 + (1 - rho) * (np.power(self.grads.dw2, 2))
+        self.cache.s_b2 = rho * self.cache.s_b2 + (1 - rho) * (np.power(self.grads.db2, 2))
 
-        self.params.w1 -= (
-            self.model_data.learning_rate
-            * self.grads.dw1
-            / (np.sqrt(self.cache.s_w1) + EPS)
-        )
-        self.params.b1 -= (
-            self.model_data.learning_rate
-            * self.grads.db1
-            / (np.sqrt(self.cache.s_b1) + EPS)
-        )
-        self.params.w2 -= (
-            self.model_data.learning_rate
-            * self.grads.dw2
-            / (np.sqrt(self.cache.s_w2) + EPS)
-        )
-        self.params.b2 -= (
-            self.model_data.learning_rate
-            * self.grads.db2
-            / (np.sqrt(self.cache.s_b2) + EPS)
-        )
+        self.params.w1 -= self.model_data.learning_rate * self.grads.dw1 / (np.sqrt(self.cache.s_w1) + EPS)
+        self.params.b1 -= self.model_data.learning_rate * self.grads.db1 / (np.sqrt(self.cache.s_b1) + EPS)
+        self.params.w2 -= self.model_data.learning_rate * self.grads.dw2 / (np.sqrt(self.cache.s_w2) + EPS)
+        self.params.b2 -= self.model_data.learning_rate * self.grads.db2 / (np.sqrt(self.cache.s_b2) + EPS)
 
     def _adam(self, beta1: float = 0.9, beta2: float = 0.999):
         self.t += 1
 
-        self.velocities.v_w1 = (
-            beta1 * self.velocities.v_w1 + (1 - beta1) * self.grads.dw1
-        )
-        self.velocities.v_b1 = (
-            beta1 * self.velocities.v_b1 + (1 - beta1) * self.grads.db1
-        )
-        self.velocities.v_w2 = (
-            beta1 * self.velocities.v_w2 + (1 - beta1) * self.grads.dw2
-        )
-        self.velocities.v_b2 = (
-            beta1 * self.velocities.v_b2 + (1 - beta1) * self.grads.db2
-        )
+        self.velocities.v_w1 = beta1 * self.velocities.v_w1 + (1 - beta1) * self.grads.dw1
+        self.velocities.v_b1 = beta1 * self.velocities.v_b1 + (1 - beta1) * self.grads.db1
+        self.velocities.v_w2 = beta1 * self.velocities.v_w2 + (1 - beta1) * self.grads.dw2
+        self.velocities.v_b2 = beta1 * self.velocities.v_b2 + (1 - beta1) * self.grads.db2
 
-        self.cache.s_w1 = beta2 * self.cache.s_w1 + (1 - beta2) * (
-            np.power(self.grads.dw1, 2)
-        )
-        self.cache.s_b1 = beta2 * self.cache.s_b1 + (1 - beta2) * (
-            np.power(self.grads.db1, 2)
-        )
-        self.cache.s_w2 = beta2 * self.cache.s_w2 + (1 - beta2) * (
-            np.power(self.grads.dw2, 2)
-        )
-        self.cache.s_b2 = beta2 * self.cache.s_b2 + (1 - beta2) * (
-            np.power(self.grads.db2, 2)
-        )
+        self.cache.s_w1 = beta2 * self.cache.s_w1 + (1 - beta2) * (np.power(self.grads.dw1, 2))
+        self.cache.s_b1 = beta2 * self.cache.s_b1 + (1 - beta2) * (np.power(self.grads.db1, 2))
+        self.cache.s_w2 = beta2 * self.cache.s_w2 + (1 - beta2) * (np.power(self.grads.dw2, 2))
+        self.cache.s_b2 = beta2 * self.cache.s_b2 + (1 - beta2) * (np.power(self.grads.db2, 2))
 
         v_w1_corr = self.velocities.v_w1 / (1 - np.power(beta1, self.t))
         v_b1_corr = self.velocities.v_b1 / (1 - np.power(beta1, self.t))
@@ -327,18 +245,10 @@ class Model:
         s_w2_corr = self.cache.s_w2 / (1 - np.power(beta2, self.t))
         s_b2_corr = self.cache.s_b2 / (1 - np.power(beta2, self.t))
 
-        self.params.w1 -= (
-            self.model_data.learning_rate * v_w1_corr / (np.sqrt(s_w1_corr) + EPS)
-        )
-        self.params.b1 -= (
-            self.model_data.learning_rate * v_b1_corr / (np.sqrt(s_b1_corr) + EPS)
-        )
-        self.params.w2 -= (
-            self.model_data.learning_rate * v_w2_corr / (np.sqrt(s_w2_corr) + EPS)
-        )
-        self.params.b2 -= (
-            self.model_data.learning_rate * v_b2_corr / (np.sqrt(s_b2_corr) + EPS)
-        )
+        self.params.w1 -= self.model_data.learning_rate * v_w1_corr / (np.sqrt(s_w1_corr) + EPS)
+        self.params.b1 -= self.model_data.learning_rate * v_b1_corr / (np.sqrt(s_b1_corr) + EPS)
+        self.params.w2 -= self.model_data.learning_rate * v_w2_corr / (np.sqrt(s_w2_corr) + EPS)
+        self.params.b2 -= self.model_data.learning_rate * v_b2_corr / (np.sqrt(s_b2_corr) + EPS)
 
     def _calc_accuracy(self, y_true: np.ndarray) -> np.float64:
         true_labels = np.argmax(y_true, axis=1)
@@ -356,16 +266,12 @@ class Model:
 
             start_idx = 0
             loss_per_epoch, accuracy_per_epoch = 0, 0
+
             num_batches = 0
 
             while start_idx < train_samples_count:
-                end_idx = min(
-                    start_idx + self.model_data.batch_size, train_samples_count
-                )
-                x_batch, y_batch = (
-                    x_train[start_idx:end_idx],
-                    y_train[start_idx:end_idx],
-                )
+                end_idx = min(start_idx + self.model_data.batch_size, train_samples_count)
+                x_batch, y_batch = x_train[start_idx:end_idx], y_train[start_idx:end_idx]
 
                 self._forward_prop(x_batch)
                 self._backward_prop(x_batch, y_batch)
@@ -466,8 +372,6 @@ class Model:
             f"Train time: {avg_train_time:.2f}s | Train time per epoch: {(avg_train_time / self.model_data.epochs):.2f}s"
         )
         logger.info(f"Train loss: {avg_train_loss[-1]:.4f} (last epoch)")
-        logger.info(
-            f"Train accuracy: {(avg_train_accuracy[-1] * 100):.2f}% (last epoch)"
-        )
+        logger.info(f"Train accuracy: {(avg_train_accuracy[-1] * 100):.2f}% (last epoch)")
         logger.info(f"Test loss: {avg_test_loss:.4f}")
         logger.info(f"Test accuracy: {(avg_test_accuracy * 100):.2f}%\n")
