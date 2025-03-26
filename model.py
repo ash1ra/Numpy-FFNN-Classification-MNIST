@@ -1,8 +1,8 @@
 import logging
-from dataclasses import dataclass, field
 from time import perf_counter
 
 import numpy as np
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt
 
 INPUT_SIZE = 28 * 28
 OUTPUT_SIZE = 10
@@ -21,58 +21,64 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 
-@dataclass
-class Params:
+class Params(BaseModel):
     w1: np.ndarray
     b1: np.ndarray
     w2: np.ndarray
     b2: np.ndarray
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-@dataclass
-class Grads:
+
+class Grads(BaseModel):
     dw1: np.ndarray
     db1: np.ndarray
     dw2: np.ndarray
     db2: np.ndarray
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-@dataclass
-class Activations:
+
+class Activations(BaseModel):
     z1: np.ndarray
     a1: np.ndarray
     a2: np.ndarray
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-@dataclass
-class Velocities:
+
+class Velocities(BaseModel):
     v_w1: np.ndarray
     v_b1: np.ndarray
     v_w2: np.ndarray
     v_b2: np.ndarray
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-@dataclass
-class Cache:
+
+class Cache(BaseModel):
     s_w1: np.ndarray
     s_b1: np.ndarray
     s_w2: np.ndarray
     s_b2: np.ndarray
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-@dataclass
-class ModelData:
-    hidden_neurons_count: int
+
+class ModelData(BaseModel):
+    hidden_neurons_count: PositiveInt
     hidden_activation_func: str
     optimizer: str
-    learning_rate: float
+    learning_rate: PositiveFloat
     epochs: int
     batch_size: int
-    train_time: float | np.float64 = field(default_factory=float)
-    train_loss: list = field(default_factory=list)
-    train_accuracy: list = field(default_factory=list)
-    test_loss: np.float64 = field(default_factory=np.float64)
-    test_accuracy: np.float64 = field(default_factory=np.float64)
+    train_time: float | np.float64 = Field(default_factory=float)
+    train_loss: list = Field(default_factory=list)
+    train_accuracy: list = Field(default_factory=list)
+    test_loss: np.float64 = Field(default_factory=np.float64)
+    test_accuracy: np.float64 = Field(default_factory=np.float64)
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class Model:
@@ -123,7 +129,7 @@ class Model:
         )
         b2 = np.zeros((1, OUTPUT_SIZE))
 
-        return Params(w1, b1, w2, b2)
+        return Params(w1=w1, b1=b1, w2=w2, b2=b2)
 
     def _sigmoid(self, z: np.ndarray) -> np.ndarray:
         return 1 / (1 + np.exp(-z))
@@ -169,7 +175,7 @@ class Model:
         z2 = np.matmul(a1, self.params.w2) + self.params.b2
         a2 = self._softmax(z2)
 
-        self.activations = Activations(z1, a1, a2)
+        self.activations = Activations(z1=z1, a1=a1, a2=a2)
 
     def _backward_prop(self, x: np.ndarray, y: np.ndarray) -> None:
         dz2 = self.activations.a2 - y
@@ -181,7 +187,7 @@ class Model:
         dw1 = np.matmul(x.T, dz1) / self.model_data.batch_size
         db1 = np.sum(dz1, axis=0, keepdims=True) / self.model_data.batch_size
 
-        self.grads = Grads(dw1, db1, dw2, db2)
+        self.grads = Grads(dw1=dw1, db1=db1, dw2=dw2, db2=db2)
 
     def _gradient_descent(self) -> None:
         self.params.w1 -= self.model_data.learning_rate * self.grads.dw1
@@ -270,7 +276,11 @@ class Model:
             num_batches = 0
 
             while start_idx < train_samples_count:
-                end_idx = min(start_idx + self.model_data.batch_size, train_samples_count)
+                if start_idx + self.model_data.batch_size <= train_samples_count:
+                    end_idx = start_idx + self.model_data.batch_size
+                else:
+                    break
+
                 x_batch, y_batch = x_train[start_idx:end_idx], y_train[start_idx:end_idx]
 
                 self._forward_prop(x_batch)
