@@ -75,6 +75,10 @@ class ModelData(BaseModel):
     train_time: float | np.float64 = Field(default_factory=float)
     train_loss: list = Field(default_factory=list)
     train_accuracy: list = Field(default_factory=list)
+    val_loss: list = Field(default_factory=list)
+    val_accuracy: list = Field(default_factory=list)
+    patience: int
+    min_delta: float
     test_loss: np.float64 = Field(default_factory=np.float64)
     test_accuracy: np.float64 = Field(default_factory=np.float64)
 
@@ -90,6 +94,8 @@ class Model:
         learning_rate: float,
         epochs: int,
         batch_size: int,
+        patience: int = 10,
+        min_delta: float = 0.0,
     ) -> None:
         self.t = 0
         self.model_data = ModelData(
@@ -99,6 +105,8 @@ class Model:
             learning_rate=learning_rate,
             epochs=epochs,
             batch_size=batch_size,
+            patience=patience,
+            min_delta=min_delta,
         )
         self.params = self._init_params()
         self.activations: Activations
@@ -262,9 +270,18 @@ class Model:
         accuracy = np.mean(true_labels == predictions)
         return accuracy
 
-    def train_model(self, x_train: np.ndarray, y_train: np.ndarray) -> None:
+    def train_model(self, x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray) -> None:
         timer_start = perf_counter()
         train_samples_count = x_train.shape[0]
+
+        best_val_loss = float("inf")
+        patience_counter = 0
+        best_params = Params(
+            w1=self.params.w1.copy(),
+            b1=self.params.b1.copy(),
+            w2=self.params.w2.copy(),
+            b2=self.params.b2.copy(),
+        )
 
         for epoch in range(self.model_data.epochs):
             perm = np.random.permutation(train_samples_count)
@@ -272,7 +289,6 @@ class Model:
 
             start_idx = 0
             loss_per_epoch, accuracy_per_epoch = 0, 0
-
             num_batches = 0
 
             while start_idx < train_samples_count:
@@ -296,14 +312,37 @@ class Model:
             loss_per_epoch /= num_batches
             accuracy_per_epoch /= num_batches
 
+            self._forward_prop(x_val)
+            val_loss = self._cross_entropy(y_val)
+            val_accuracy = self._calc_accuracy(y_val)
+
             self.model_data.train_loss.append(loss_per_epoch)
             self.model_data.train_accuracy.append(accuracy_per_epoch)
+            self.model_data.val_loss.append(val_loss)
+            self.model_data.val_accuracy.append(val_accuracy)
 
             logger.info(
-                f"Epoch: {epoch + 1} | Loss: {loss_per_epoch:.4f} | Accuracy: {(accuracy_per_epoch * 100):.2f}%"
+                f"Epoch: {epoch + 1} | Train Loss: {loss_per_epoch:.4f} | Train Acc: {(accuracy_per_epoch * 100):.2f}% | "
+                f"Val Loss: {val_loss:.4f} | Val Acc: {(val_accuracy * 100):.2f}%"
             )
 
-        self.model_data.train_time = perf_counter() - timer_start
+            if val_loss < best_val_loss - self.model_data.min_delta:
+                best_val_loss = val_loss
+                best_params = Params(
+                    w1=self.params.w1.copy(),
+                    b1=self.params.b1.copy(),
+                    w2=self.params.w2.copy(),
+                    b2=self.params.b2.copy(),
+                )
+                patience_counter = 0
+            else:
+                patience_counter += 1
+                logger.info(f"No improvement in val loss for {patience_counter}/{self.model_data.patience} epochs")
+                if patience_counter >= self.model_data.patience:
+                    logger.info(f"Early stopping triggered after {epoch + 1} epochs")
+                    self.params = best_params  # Восстанавливаем лучшие веса
+                    break
+            self.model_data.train_time = perf_counter() - timer_start
 
     def test_model(self, x_test: np.ndarray, y_test: np.ndarray) -> None:
         self._forward_prop(x_test)
@@ -319,6 +358,8 @@ class Model:
         self,
         x_train: np.ndarray,
         y_train: np.ndarray,
+        x_val: np.ndarray,
+        y_val: np.ndarray,
         x_test: np.ndarray,
         y_test: np.ndarray,
         count: int,
@@ -354,7 +395,7 @@ class Model:
             self.model_data.train_loss = []
             self.model_data.train_accuracy = []
 
-            self.train_model(x_train, y_train)
+            self.train_model(x_train, y_train, x_val, y_val)
             self.test_model(x_test, y_test)
 
             all_train_times.append(self.model_data.train_time)
@@ -365,8 +406,14 @@ class Model:
 
         avg_train_time = np.mean(all_train_times)
 
-        avg_train_loss = np.mean(np.array(all_train_losses), axis=0).tolist()
-        avg_train_accuracy = np.mean(np.array(all_train_accuracies), axis=0).tolist()
+        max_length = max(len(lst) for lst in all_train_losses)
+        avg_train_loss = []
+        avg_train_accuracy = []
+        for epoch in range(max_length):
+            epoch_losses = [lst[epoch] for lst in all_train_losses if len(lst) > epoch]
+            epoch_accuracies = [lst[epoch] for lst in all_train_accuracies if len(lst) > epoch]
+            avg_train_loss.append(np.mean(epoch_losses))
+            avg_train_accuracy.append(np.mean(epoch_accuracies))
 
         avg_test_loss = np.mean(all_test_losses)
         avg_test_accuracy = np.mean(all_test_accuracies)
@@ -379,7 +426,7 @@ class Model:
 
         logger.info(f"Average results over {count} runs:")
         logger.info(
-            f"Train time: {avg_train_time:.2f}s | Train time per epoch: {(avg_train_time / self.model_data.epochs):.2f}s"
+            f"Train time: {avg_train_time:.2f}s | Train time per epoch: {(avg_train_time / len(avg_train_loss)):.2f}s"
         )
         logger.info(f"Train loss: {avg_train_loss[-1]:.4f} (last epoch)")
         logger.info(f"Train accuracy: {(avg_train_accuracy[-1] * 100):.2f}% (last epoch)")

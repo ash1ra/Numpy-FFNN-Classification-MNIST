@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
-from model import Model
+
 import plots
+from model import Model
 
 TEST_DATA_SPLIT = 2000
+VAL_DATA_SPLIT = 6000
 
 
 def one_hot_encoding(y: np.ndarray) -> np.ndarray:
@@ -15,20 +17,23 @@ def one_hot_encoding(y: np.ndarray) -> np.ndarray:
 def get_data() -> tuple[np.ndarray, ...]:
     data = pd.read_csv("data/train.csv").to_numpy()
 
-    train_data = data[TEST_DATA_SPLIT:]
     test_data = data[:TEST_DATA_SPLIT]
+    val_data = data[TEST_DATA_SPLIT : TEST_DATA_SPLIT + VAL_DATA_SPLIT]
+    train_data = data[TEST_DATA_SPLIT + VAL_DATA_SPLIT :]
 
     x_train, y_train = train_data[:, 1:] / 255, train_data[:, 0]
+    x_val, y_val = val_data[:, 1:] / 255, val_data[:, 0]
     x_test, y_test = test_data[:, 1:] / 255, test_data[:, 0]
 
     y_train = one_hot_encoding(y_train)
+    y_val = one_hot_encoding(y_val)
     y_test = one_hot_encoding(y_test)
 
-    return x_train, y_train, x_test, y_test
+    return x_train, y_train, x_val, y_val, x_test, y_test
 
 
 def main() -> None:
-    x_train, y_train, x_test, y_test = get_data()
+    x_train, y_train, x_val, y_val, x_test, y_test = get_data()
 
     model1 = Model(
         hidden_neurons_count=10,
@@ -39,7 +44,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model1.calc_avarage(x_train, y_train, x_test, y_test, 10)
+    model1.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
 
     model2 = Model(
         hidden_neurons_count=10,
@@ -50,7 +55,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model2.calc_avarage(x_train, y_train, x_test, y_test, 10)
+    model2.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
 
     model3 = Model(
         hidden_neurons_count=10,
@@ -61,7 +66,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model3.calc_avarage(x_train, y_train, x_test, y_test, 10)
+    model3.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
 
     model4 = Model(
         hidden_neurons_count=10,
@@ -72,7 +77,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model4.calc_avarage(x_train, y_train, x_test, y_test, 10)
+    model4.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
 
     model5 = Model(
         hidden_neurons_count=10,
@@ -83,7 +88,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model5.calc_avarage(x_train, y_train, x_test, y_test, 10)
+    model5.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
 
     plots.plot_train_loss_and_accuracy(
         (
