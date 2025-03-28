@@ -68,8 +68,8 @@ class Cache(BaseModel):
 
 class ModelData(BaseModel):
     hidden_neurons_count: PositiveInt
-    hidden_activation_func: tuple[Callable, Callable]
-    optimizer: Callable
+    hidden_activation_func: tuple[str, Callable, Callable]
+    optimizer: tuple[str, Callable]
     learning_rate: PositiveFloat
     epochs: PositiveInt
     batch_size: PositiveInt
@@ -99,18 +99,18 @@ class Model:
         min_delta: PositiveFloat = 0.0,
     ) -> None:
         self._activation_map = {
-            "sigmoid": (self._sigmoid, self._sigmoid_derivative),
-            "tanh": (self._tanh, self._tanh_derivative),
-            "relu": (self._relu, self._relu_derivative),
-            "leaky_relu": (self._leaky_relu, self._leaky_relu_derivative),
-            "elu": (self._elu, self._elu_derivative),
+            "sigmoid": ("Sigmoid", self._sigmoid, self._sigmoid_derivative),
+            "tanh": ("tanh", self._tanh, self._tanh_derivative),
+            "relu": ("ReLU", self._relu, self._relu_derivative),
+            "leaky_relu": ("Leaky ReLU", self._leaky_relu, self._leaky_relu_derivative),
+            "elu": ("ELU", self._elu, self._elu_derivative),
         }
         self._optimizer_map = {
-            "gradient_descent": self._gradient_descent,
-            "momentum": self._momentum,
-            "nesterov": self._nesterov,
-            "rmsprop": self._rmsprop,
-            "adam": self._adam,
+            "gradient_descent": ("Gradient Descent", self._gradient_descent),
+            "momentum": ("Momentum", self._momentum),
+            "nesterov": ("Nesterov", self._nesterov),
+            "rmsprop": ("RMSprop", self._rmsprop),
+            "adam": ("Adam", self._adam),
         }
         self._t = 0
         self.model_data = ModelData(
@@ -135,10 +135,8 @@ class Model:
 
         logger.info("Model initialization with parameters:")
         logger.info(f"Number of hidden neurons: {self.model_data.hidden_neurons_count}")
-        logger.info(
-            f"Hidden layer activation function: {self.model_data.hidden_activation_func[0].__name__.replace('_', '').capitalize()}"
-        )
-        logger.info(f"Optimizer: {self.model_data.optimizer.__name__.replace('_', '').capitalize()}")
+        logger.info(f"Hidden layer activation function: {self.model_data.hidden_activation_func[0]}")
+        logger.info(f"Optimizer: {self.model_data.optimizer[0]}")
         logger.info(f"Learning rate: {self.model_data.learning_rate}")
         logger.info(f"Epochs: {self.model_data.epochs}")
         logger.info(f"Batch size: {self.model_data.batch_size}")
@@ -211,7 +209,7 @@ class Model:
 
     def _forward_prop(self, x: np.ndarray) -> None:
         z1 = np.matmul(x, self.params.w1) + self.params.b1
-        a1 = self.model_data.hidden_activation_func[0](z1)
+        a1 = self.model_data.hidden_activation_func[1](z1)
 
         z2 = np.matmul(a1, self.params.w2) + self.params.b2
         a2 = self._softmax(z2)
@@ -224,7 +222,7 @@ class Model:
         db2 = np.sum(dz2, axis=0, keepdims=True) / self.model_data.batch_size
 
         da1 = np.matmul(self.params.w2, dz2.T)
-        dz1 = da1.T * self.model_data.hidden_activation_func[1](self.activations.z1)
+        dz1 = da1.T * self.model_data.hidden_activation_func[2](self.activations.z1)
         dw1 = np.matmul(x.T, dz1) / self.model_data.batch_size
         db1 = np.sum(dz1, axis=0, keepdims=True) / self.model_data.batch_size
 
@@ -334,7 +332,7 @@ class Model:
 
                 self._forward_prop(x_batch)
                 self._backward_prop(x_batch, y_batch)
-                self.model_data.optimizer()
+                self.model_data.optimizer[1]()
 
                 loss_per_epoch += self._cross_entropy(y_batch)
                 accuracy_per_epoch += self._calc_accuracy(y_batch)
