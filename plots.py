@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
-from model import ModelData
+from model import Model, ModelData
 
 
-def create_suptitle(model_data: ModelData, comparable_attr: str) -> str:
+def create_suptitle(model_data: ModelData, comparable_attr: str | None = None) -> str:
     attrs_to_skip = [
         comparable_attr,
         "train_time",
@@ -130,4 +131,32 @@ def plot_test_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_a
         )
     plt.tight_layout()
 
+    plt.show()
+
+
+def plot_predictions(model: Model, x: np.ndarray, y: np.ndarray, indices: np.ndarray) -> None:
+    cols = 5
+    rows = (len(indices) + cols - 1) // cols
+
+    fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
+    fig.suptitle(create_suptitle(model.model_data))
+
+    if rows == 1:
+        axes = np.array([axes])
+
+    for i, index in enumerate(indices):
+        row = i // cols
+        col = i % cols
+        ax = axes[row, col]
+
+        image = x[index].reshape(28, 28)
+        true_label = np.argmax(y[index])
+        pred_label = model.predict(x[index])
+
+        ax.imshow(image, cmap="gray")
+        color = "red" if true_label != pred_label else "green"
+        ax.set_title(f"True: {true_label} | Pred: {pred_label}", color=color)
+        ax.axis("off")
+
+    plt.tight_layout()
     plt.show()

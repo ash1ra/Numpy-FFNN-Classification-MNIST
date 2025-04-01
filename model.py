@@ -386,6 +386,15 @@ class Model:
 
         logger.info(f"Test loss: {loss:.4f} | Test acc: {(accuracy * 100):.2f}%\n")
 
+    def predict(self, x: np.ndarray) -> int:
+        if x.ndim == 1:
+            x = x.reshape(1, -1)
+
+        self._forward_prop(x)
+        predicted_label = np.argmax(self.activations.a2, axis=1)[0]
+
+        return predicted_label
+
     def calc_avarage(
         self,
         x_train: np.ndarray,
