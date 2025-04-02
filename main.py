@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
+import plots
 from model import Model
-from plots import plot_predictions
 
 TEST_DATA_SPLIT = 2000
 VAL_DATA_SPLIT = 6000
@@ -45,73 +45,73 @@ def main() -> None:
     )
 
     model1.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
-    plot_predictions(model1, x_test, y_test, np.random.randint(0, x_test.shape[-1], 10))
+    # plots.plot_predictions(model1, x_test, y_test, np.random.randint(0, x_test.shape[-1], 10))
 
-    # model2 = Model(
-    #     hidden_neurons_count=10,
-    #     hidden_activation_func="tanh",
-    #     optimizer="adam",
-    #     learning_rate=0.001,
-    #     epochs=100,
-    #     batch_size=250,
-    # )
-    #
-    # model2.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
-    #
-    # model3 = Model(
-    #     hidden_neurons_count=10,
-    #     hidden_activation_func="relu",
-    #     optimizer="adam",
-    #     learning_rate=0.001,
-    #     epochs=100,
-    #     batch_size=250,
-    # )
-    #
-    # model3.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
-    #
-    # model4 = Model(
-    #     hidden_neurons_count=10,
-    #     hidden_activation_func="leaky_relu",
-    #     optimizer="adam",
-    #     learning_rate=0.001,
-    #     epochs=100,
-    #     batch_size=250,
-    # )
-    #
-    # model4.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
-    #
-    # model5 = Model(
-    #     hidden_neurons_count=10,
-    #     hidden_activation_func="elu",
-    #     optimizer="adam",
-    #     learning_rate=0.001,
-    #     epochs=100,
-    #     batch_size=250,
-    # )
-    #
-    # model5.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
-    #
-    # plots.plot_train_loss_and_accuracy(
-    #     (
-    #         model1.model_data,
-    #         model2.model_data,
-    #         model3.model_data,
-    #         model4.model_data,
-    #         model5.model_data,
-    #     ),
-    #     "hidden_activation_func",
-    # )
-    #
-    # plots.plot_test_loss_and_accuracy(
-    #     (
-    #         model1.model_data,
-    #         model2.model_data,
-    #         model3.model_data,
-    #         model4.model_data,
-    #         model5.model_data,
-    #     ),
-    #     "hidden_activation_func",
-    # )
+    model2 = Model(
+        hidden_neurons_count=10,
+        hidden_activation_func="tanh",
+        optimizer="adam",
+        learning_rate=0.001,
+        epochs=100,
+        batch_size=250,
+    )
+
+    model2.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+
+    model3 = Model(
+        hidden_neurons_count=10,
+        hidden_activation_func="relu",
+        optimizer="adam",
+        learning_rate=0.001,
+        epochs=100,
+        batch_size=250,
+    )
+
+    model3.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+
+    model4 = Model(
+        hidden_neurons_count=10,
+        hidden_activation_func="leaky_relu",
+        optimizer="adam",
+        learning_rate=0.001,
+        epochs=100,
+        batch_size=250,
+    )
+
+    model4.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+
+    model5 = Model(
+        hidden_neurons_count=10,
+        hidden_activation_func="elu",
+        optimizer="adam",
+        learning_rate=0.001,
+        epochs=100,
+        batch_size=250,
+    )
+
+    model5.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+
+    plots.plot_train_loss_and_accuracy(
+        (
+            model1.model_data,
+            model2.model_data,
+            model3.model_data,
+            model4.model_data,
+            model5.model_data,
+        ),
+        "hidden_activation_func",
+    )
+
+    plots.plot_test_loss_and_accuracy(
+        (
+            model1.model_data,
+            model2.model_data,
+            model3.model_data,
+            model4.model_data,
+            model5.model_data,
+        ),
+        "hidden_activation_func",
+    )
 
 
 if __name__ == "__main__":

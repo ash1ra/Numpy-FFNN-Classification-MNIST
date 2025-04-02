@@ -16,17 +16,21 @@ def create_suptitle(model_data: ModelData, comparable_attr: str | None = None) -
         "test_accuracy",
     ]
 
-    suptitle = "| "
+    attrs = []
     for attr in vars(model_data):
         if attr not in attrs_to_skip:
             formated_attr = attr.capitalize().replace("_", " ")
             if attr in ["hidden_activation_func", "optimizer"]:
-                attr_value = eval(f"model_data.{attr}[0]")
+                attr_value = getattr(model_data, attr)[0]
             else:
-                attr_value = eval(f"model_data.{attr}")
-            suptitle += f"{formated_attr}: {attr_value} | "
+                attr_value = getattr(model_data, attr)
+            attrs.append(f"{formated_attr}: {attr_value}")
 
-    return suptitle
+    mid_point = (len(attrs) + 1) // 2
+    first_line = " | ".join(attrs[:mid_point])
+    second_line = " | ".join(attrs[mid_point:])
+
+    return f"{first_line}\n{second_line}"
 
 
 def plot_train_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
@@ -45,9 +49,9 @@ def plot_train_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_
     lines, labels = [], []
     for model_data in models_data:
         if comparable_attr in ["hidden_activation_func", "optimizer"]:
-            comparable_attr_data = eval(f"model_data.{comparable_attr}[0]")
+            comparable_attr_data = getattr(model_data, comparable_attr)[0]
         else:
-            comparable_attr_data = eval(f"model_data.{comparable_attr}")
+            comparable_attr_data = getattr(model_data, comparable_attr)
 
         label = f"{comparable_attr.capitalize().replace('_', ' ')}: {comparable_attr_data}"
 
@@ -71,9 +75,9 @@ def plot_test_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_a
     fig.suptitle(create_suptitle(models_data[0], comparable_attr))
 
     if comparable_attr in ["hidden_activation_func", "optimizer"]:
-        x_labels = [str(eval(f"model_data.{comparable_attr}[0]")) for model_data in models_data]
+        x_labels = [getattr(model_data, comparable_attr)[0] for model_data in models_data]
     else:
-        x_labels = [str(eval(f"model_data.{comparable_attr}")) for model_data in models_data]
+        x_labels = [getattr(model_data, comparable_attr) for model_data in models_data]
 
     test_losses = [model_data.test_loss for model_data in models_data]
     test_accuracies = [model_data.test_accuracy for model_data in models_data]
