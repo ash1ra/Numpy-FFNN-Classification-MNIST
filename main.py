@@ -44,7 +44,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model1.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+    model1.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 10)
     # plots.plot_predictions(model1, x_test, y_test, np.random.randint(0, x_test.shape[-1], 10))
 
     model2 = Model(
@@ -56,7 +56,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model2.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+    model2.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 10)
 
     model3 = Model(
         hidden_neurons_count=10,
@@ -67,7 +67,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model3.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+    model3.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 10)
 
     model4 = Model(
         hidden_neurons_count=10,
@@ -78,7 +78,7 @@ def main() -> None:
         batch_size=250,
     )
 
-    model4.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+    model4.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 10)
 
     model5 = Model(
         hidden_neurons_count=10,
@@ -89,9 +89,9 @@ def main() -> None:
         batch_size=250,
     )
 
-    model5.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 2)
+    model5.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 10)
 
-    plots.plot_train_loss_and_accuracy(
+    plots.plot_train_and_val_loss_and_accuracy(
         (
             model1.model_data,
             model2.model_data,

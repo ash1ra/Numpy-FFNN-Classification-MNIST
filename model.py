@@ -1,4 +1,7 @@
+import datetime
 import logging
+from datetime import datetime
+from pathlib import Path
 from time import perf_counter
 from typing import Callable
 
@@ -9,16 +12,27 @@ INPUT_SIZE = 28 * 28
 OUTPUT_SIZE = 10
 EPS = 1e-15
 LOGGER_LEVEL = logging.INFO
+LOGS_DIR = Path("logs")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGER_LEVEL)
-console_handler = logging.StreamHandler()
-console_handler.setLevel(LOGGER_LEVEL)
+
 formatter = logging.Formatter(
     "%(asctime)s | %(levelname)s | %(message)s",
     datefmt="%H:%M:%S",
 )
+
+log_filename = LOGS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+
+file_handler = logging.FileHandler(log_filename)
+file_handler.setLevel(LOGGER_LEVEL)
+file_handler.setFormatter(formatter)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(LOGGER_LEVEL)
 console_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
 

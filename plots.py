@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 from model import Model, ModelData
+
+sns.set_theme()
 
 
 def create_suptitle(model_data: ModelData, comparable_attr: str | None = None) -> str:
@@ -33,18 +36,26 @@ def create_suptitle(model_data: ModelData, comparable_attr: str | None = None) -
     return f"{first_line}\n{second_line}"
 
 
-def plot_train_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
-    fig, axes = plt.subplots(1, 2)
+def plot_train_and_val_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
 
     fig.suptitle(create_suptitle(models_data[0], comparable_attr))
 
-    axes[0].set_title("Train loss")
-    axes[0].set(xlabel="Epochs", ylabel="Loss")
-    axes[0].set_yticks([])
+    axes[0, 0].set_title("Train loss")
+    axes[0, 0].set(xlabel="Epochs", ylabel="Loss")
+    axes[0, 0].set_yticks([])
 
-    axes[1].set_title("Train accuracy")
-    axes[1].set(xlabel="Epochs", ylabel="Accuracy")
-    axes[1].set_yticks([])
+    axes[0, 1].set_title("Train accuracy")
+    axes[0, 1].set(xlabel="Epochs", ylabel="Accuracy")
+    axes[0, 1].set_yticks([])
+
+    axes[1, 0].set_title("Validation loss")
+    axes[1, 0].set(xlabel="Epochs", ylabel="Loss")
+    axes[1, 0].set_yticks([])
+
+    axes[1, 1].set_title("Validation accuracy")
+    axes[1, 1].set(xlabel="Epochs", ylabel="Accuracy")
+    axes[1, 1].set_yticks([])
 
     lines, labels = [], []
     for model_data in models_data:
@@ -55,12 +66,15 @@ def plot_train_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_
 
         label = f"{comparable_attr.capitalize().replace('_', ' ')}: {comparable_attr_data}"
 
-        (line,) = axes[0].plot(model_data.train_loss, label=label)
+        (line,) = axes[0, 0].plot(model_data.train_loss, label=label)
 
         lines.append(line)
         labels.append(label)
 
-        axes[1].plot(model_data.train_accuracy)
+        axes[0, 1].plot(model_data.train_accuracy)
+
+        axes[1, 0].plot(model_data.val_loss)
+        axes[1, 1].plot(model_data.val_accuracy)
 
     fig.legend(lines, labels, loc="outside lower center")
     plt.tight_layout()
