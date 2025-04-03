@@ -1,6 +1,5 @@
 import datetime
 import logging
-from datetime import datetime
 from pathlib import Path
 from time import perf_counter
 from typing import Callable
@@ -22,7 +21,7 @@ formatter = logging.Formatter(
     datefmt="%H:%M:%S",
 )
 
-log_filename = LOGS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+log_filename = LOGS_DIR / f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
 file_handler = logging.FileHandler(log_filename)
 file_handler.setLevel(LOGGER_LEVEL)
