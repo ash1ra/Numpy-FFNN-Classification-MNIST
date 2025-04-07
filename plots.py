@@ -12,6 +12,7 @@ def create_suptitle(model_data: ModelData, comparable_attr: str | None = None) -
     attrs_to_skip = [
         comparable_attr,
         "train_time",
+        "train_epochs",
         "train_loss",
         "train_accuracy",
         "val_loss",
@@ -42,7 +43,7 @@ def create_comparable_label(model_data: ModelData, comparable_attr: str) -> str:
     return label_value
 
 
-def plot_train_and_val_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
+def plot_train_and_val_loss_and_accuracy(models_data: list[ModelData], comparable_attr: str) -> None:
     fig = make_subplots(
         rows=2,
         cols=2,
@@ -139,7 +140,7 @@ def plot_train_and_val_loss_and_accuracy(models_data: tuple[ModelData, ...], com
     fig.show()
 
 
-def plot_test_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
+def plot_test_loss_and_accuracy(models_data: list[ModelData], comparable_attr: str) -> None:
     fig = make_subplots(
         rows=1, cols=2, subplot_titles=("Test loss (less is better)", "Test accuracy (greater is better)")
     )
@@ -149,7 +150,7 @@ def plot_test_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_a
     test_losses = [model_data.test_loss for model_data in models_data]
     test_accuracies = [model_data.test_accuracy for model_data in models_data]
     train_times = [model_data.train_time for model_data in models_data]
-    epochs = [len(model_data.train_loss) for model_data in models_data]
+    epochs = [model_data.train_epochs for model_data in models_data]
 
     fig.add_trace(
         go.Bar(
