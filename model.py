@@ -89,6 +89,7 @@ class ModelData(BaseModel):
     patience: PositiveInt
     min_delta: NonNegativeFloat
     train_time: float | np.float64 = Field(default_factory=float)
+    train_epochs: PositiveInt = Field(default_factory=int)
     train_loss: list = Field(default_factory=list)
     train_accuracy: list = Field(default_factory=list)
     val_loss: list = Field(default_factory=list)
@@ -370,22 +371,22 @@ class Model:
                 f"Val loss: {val_loss:.4f} | Val acc: {(val_accuracy * 100):.2f}%"
             )
 
-            if val_loss < best_val_loss - self.model_data.min_delta:
-                best_val_loss = val_loss
-                best_params = Params(
-                    w1=self.params.w1.copy(),
-                    b1=self.params.b1.copy(),
-                    w2=self.params.w2.copy(),
-                    b2=self.params.b2.copy(),
-                )
-                patience_counter = 0
-            else:
-                patience_counter += 1
-                logger.info(f"No improvement in val loss for {patience_counter}/{self.model_data.patience} epochs")
-                if patience_counter >= self.model_data.patience:
-                    logger.info(f"Early stopping triggered after {epoch + 1} epochs")
-                    self.params = best_params
-                    break
+            # if val_loss < best_val_loss - self.model_data.min_delta:
+            #     best_val_loss = val_loss
+            #     best_params = Params(
+            #         w1=self.params.w1.copy(),
+            #         b1=self.params.b1.copy(),
+            #         w2=self.params.w2.copy(),
+            #         b2=self.params.b2.copy(),
+            #     )
+            #     patience_counter = 0
+            # else:
+            #     patience_counter += 1
+            #     logger.info(f"No improvement in val loss for {patience_counter}/{self.model_data.patience} epochs")
+            #     if patience_counter >= self.model_data.patience:
+            #         logger.info(f"Early stopping triggered after {epoch + 1} epochs")
+            #         self.params = best_params
+            #         break
 
         self.model_data.train_time = perf_counter() - timer_start
 
@@ -419,6 +420,7 @@ class Model:
         count: int,
     ) -> None:
         all_train_times = []
+        all_train_epochs = []
         all_train_losses = []
         all_train_accuracies = []
         all_val_losses = []
@@ -446,6 +448,7 @@ class Model:
             self.test_model(x_test, y_test)
 
             all_train_times.append(self.model_data.train_time)
+            all_train_epochs.append(len(self.model_data.train_loss))
             all_train_losses.append(self.model_data.train_loss)
             all_train_accuracies.append(self.model_data.train_accuracy)
             all_val_losses.append(self.model_data.val_loss)
@@ -454,6 +457,7 @@ class Model:
             all_test_accuracies.append(self.model_data.test_accuracy)
 
         avg_train_time = np.mean(all_train_times)
+        avg_train_epochs = np.mean(all_train_epochs)
 
         max_length = max(len(lst) for lst in all_train_losses)
         avg_train_loss = []
@@ -477,6 +481,7 @@ class Model:
         avg_test_accuracy = np.mean(all_test_accuracies)
 
         self.model_data.train_time = avg_train_time
+        self.model_data.train_epochs = avg_train_epochs
         self.model_data.train_loss = avg_train_loss
         self.model_data.train_accuracy = avg_train_accuracy
         self.model_data.val_loss = avg_val_loss
@@ -486,7 +491,7 @@ class Model:
 
         logger.info(f"Average results over {count} runs:")
         logger.info(
-            f"Train time: {avg_train_time:.2f}s | Train time per epoch: {(avg_train_time / len(avg_train_loss)):.2f}s"
+            f"Train time: {avg_train_time:.2f}s | Train epochs: {avg_train_epochs} | Train time per epoch: {(avg_train_time / len(avg_train_loss)):.2f}s"
         )
         logger.info(f"Train loss: {avg_train_loss[-1]:.4f} (last epoch)")
         logger.info(f"Train accuracy: {(avg_train_accuracy[-1] * 100):.2f}% (last epoch)")
