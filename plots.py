@@ -1,10 +1,11 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
+import plotly.graph_objects as go
+import plotly.io as pio
+from plotly.subplots import make_subplots
 
 from model import Model, ModelData
 
-sns.set_style("darkgrid")
+pio.templates.default = "plotly"
 
 
 def create_suptitle(model_data: ModelData, comparable_attr: str | None = None) -> str:
@@ -29,174 +30,219 @@ def create_suptitle(model_data: ModelData, comparable_attr: str | None = None) -
                 attr_value = getattr(model_data, attr)
             attrs.append(f"{formated_attr}: {attr_value}")
 
-    mid_point = (len(attrs) + 1) // 2
-
-    return f"{' | '.join(attrs[:mid_point])}\n{' | '.join(attrs[mid_point:])}"
+    return " | ".join(attrs)
 
 
 def create_comparable_label(model_data: ModelData, comparable_attr: str) -> str:
     if comparable_attr in ["hidden_activation_func", "optimizer"]:
-        value = getattr(model_data, comparable_attr)[0]
+        label_value = getattr(model_data, comparable_attr)[0]
     else:
-        value = getattr(model_data, comparable_attr)
+        label_value = getattr(model_data, comparable_attr)
 
-    return f"{comparable_attr.capitalize().replace('_', '')}: {value}"
+    return label_value
 
 
 def plot_train_and_val_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
-    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=(
+            "Train loss (less is better)",
+            "Train accuracy (greater is better)",
+            "Validate loss (less is better)",
+            "Validate accuracy (greater is better)",
+        ),
+    )
 
-    fig.suptitle(create_suptitle(models_data[0], comparable_attr))
+    unique_values = {create_comparable_label(model_data, comparable_attr) for model_data in models_data}
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+    color_map = {value: colors[i % len(colors)] for i, value in enumerate(unique_values)}
 
-    axes[0, 0].set_title("Train loss")
-    axes[0, 0].set(xlabel="Epochs", ylabel="Loss")
-    axes[0, 0].set_yticks([])
-
-    axes[0, 1].set_title("Train accuracy")
-    axes[0, 1].set(xlabel="Epochs", ylabel="Accuracy")
-    axes[0, 1].set_yticks([])
-
-    axes[1, 0].set_title("Validation loss")
-    axes[1, 0].set(xlabel="Epochs", ylabel="Loss")
-    axes[1, 0].set_yticks([])
-
-    axes[1, 1].set_title("Validation accuracy")
-    axes[1, 1].set(xlabel="Epochs", ylabel="Accuracy")
-    axes[1, 1].set_yticks([])
-
-    # lines, labels = [], []
     for model_data in models_data:
-        label = create_comparable_label(model_data, comparable_attr)
+        label_value = create_comparable_label(model_data, comparable_attr)
+        epochs = list(range(len(model_data.train_loss)))
+        color = color_map[label_value]
 
-        sns.lineplot(x=range(len(model_data.train_loss)), y=model_data.train_loss, label=label, ax=axes[0, 0])
-        sns.lineplot(x=range(len(model_data.train_accuracy)), y=model_data.train_accuracy, ax=axes[0, 1])
-        sns.lineplot(x=range(len(model_data.val_loss)), y=model_data.val_loss, ax=axes[1, 0])
-        sns.lineplot(x=range(len(model_data.val_accuracy)), y=model_data.val_accuracy, ax=axes[1, 1])
+        fig.add_trace(
+            go.Scatter(
+                x=epochs,
+                y=model_data.train_loss,
+                name=label_value,
+                legendgroup=label_value,
+                showlegend=True,
+                line=dict(color=color),
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=epochs,
+                y=model_data.train_accuracy,
+                name=label_value,
+                legendgroup=label_value,
+                showlegend=False,
+                line=dict(color=color),
+            ),
+            row=1,
+            col=2,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=epochs,
+                y=model_data.val_loss,
+                name=label_value,
+                legendgroup=label_value,
+                showlegend=False,
+                line=dict(color=color),
+            ),
+            row=2,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=epochs,
+                y=model_data.val_accuracy,
+                name=label_value,
+                legendgroup=label_value,
+                showlegend=False,
+                line=dict(color=color),
+            ),
+            row=2,
+            col=2,
+        )
 
-        # (line,) = axes[0, 0].plot(model_data.train_loss, label=label)
-        #
-        # lines.append(line)
-        # labels.append(label)
-        #
-        # axes[0, 1].plot(model_data.train_accuracy)
-        #
-        # axes[1, 0].plot(model_data.val_loss)
-        # axes[1, 1].plot(model_data.val_accuracy)
+    fig.update_xaxes(title_text="Epochs")
+    fig.update_yaxes(title_text="Loss", col=1, showticklabels=False)
+    fig.update_yaxes(title_text="Accuracy", col=2, showticklabels=False)
 
-    # fig.legend(lines, labels, loc="outside lower center")
+    fig.update_layout(
+        title_text=create_suptitle(models_data[0], comparable_attr),
+        title=dict(
+            x=0.5,
+            y=0.98,
+            xanchor="center",
+            yanchor="top",
+            font=dict(size=20),
+        ),
+        legend_title_text=f"{comparable_attr.capitalize().replace('_', ' ')}:",
+        legend=dict(
+            x=0.5,
+            y=-0.05,
+            xanchor="center",
+            yanchor="bottom",
+            orientation="h",
+            font=dict(size=16),
+        ),
+    )
 
-    axes[0, 0].legend(loc="lower center", fontsize=10)
-    # for ax in [axes[0, 1], axes[1, 0], axes[1, 1]]:
-    #     ax.legend().set_visible(False)
-
-    plt.tight_layout()
-    # plt.subplots_adjust(bottom=0.2)
-    plt.show()
+    fig.show()
 
 
 def plot_test_loss_and_accuracy(models_data: tuple[ModelData, ...], comparable_attr: str) -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    fig = make_subplots(
+        rows=1, cols=2, subplot_titles=("Test loss (less is better)", "Test accuracy (greater is better)")
+    )
 
-    fig.suptitle(create_suptitle(models_data[0], comparable_attr))
-
-    if comparable_attr in ["hidden_activation_func", "optimizer"]:
-        x_labels = [getattr(model_data, comparable_attr)[0] for model_data in models_data]
-    else:
-        x_labels = [getattr(model_data, comparable_attr) for model_data in models_data]
+    x_labels = [create_comparable_label(model_data, comparable_attr) for model_data in models_data]
 
     test_losses = [model_data.test_loss for model_data in models_data]
     test_accuracies = [model_data.test_accuracy for model_data in models_data]
     train_times = [model_data.train_time for model_data in models_data]
-    epochs_trained = [len(model_data.train_loss) for model_data in models_data]
+    epochs = [len(model_data.train_loss) for model_data in models_data]
 
-    x_positions = range(len(models_data))
-    test_loss_bars = axes[0].bar(x_positions, test_losses)
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=test_losses,
+            text=[
+                f"Loss: {loss:.2f}<br>Train time: {time:.2f}s<br>Train epochs: {epochs}"
+                for loss, time, epochs in zip(test_losses, train_times, epochs)
+            ],
+            textfont=dict(size=16),
+        ),
+        row=1,
+        col=1,
+    )
 
-    sns.barplot(x=x_labels, y=test_losses, ax=axes[0])
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=test_accuracies,
+            text=[
+                f"Accuracy: {acc * 100:.2f}%<br>Train time: {time:.2f}s<br>Train epochs: {epochs}"
+                for acc, time, epochs in zip(test_accuracies, train_times, epochs)
+            ],
+            textfont=dict(size=16),
+        ),
+        row=1,
+        col=2,
+    )
 
-    axes[0].set_title("Test loss (lower is better)")
-    # axes[0].set_xticks(x_positions)
-    # axes[0].set_yticks([])
-    # axes[0].set_xticklabels(x_labels)
-    # axes[0].set_xlabel(comparable_attr.capitalize().replace("_", " "))
+    fig.update_yaxes(showticklabels=False)
+    fig.update_xaxes(tickfont=dict(size=16))
 
-    for bar, train_time, epochs in zip(test_loss_bars, train_times, epochs_trained):
-        height = bar.get_height()
-        axes[0].text(
-            bar.get_x() + bar.get_width() / 2,
-            height,
-            f"{height:.2f}",
-            ha="center",
-            va="bottom",
-        )
-        axes[0].text(
-            bar.get_x() + bar.get_width() / 2,
-            0,
-            f"{train_time:.2f}s\n{epochs} epochs",
-            ha="center",
-            va="bottom",
-            color="white",
-        )
+    fig.update_layout(
+        title_text=create_suptitle(models_data[0], comparable_attr),
+        title=dict(
+            x=0.5,
+            y=0.98,
+            xanchor="center",
+            yanchor="top",
+            font=dict(size=20),
+        ),
+        showlegend=False,
+    )
 
-    test_accuracy_bars = axes[1].bar(x_positions, test_accuracies)
-
-    sns.barplot(x=x_labels, y=test_accuracies, ax=axes[1])
-
-    axes[1].set_title("Test accuracy (higher is better)")
-    # axes[1].set_xticks(x_positions)
-    # axes[1].set_yticks([])
-    # axes[1].set_xticklabels(x_labels)
-    # axes[1].set_xlabel(comparable_attr.capitalize().replace("_", " "))
-
-    for bar, train_time, epochs in zip(test_accuracy_bars, train_times, epochs_trained):
-        height = bar.get_height()
-        axes[1].text(
-            bar.get_x() + bar.get_width() / 2,
-            height,
-            f"{(height * 100):.2f}%",
-            ha="center",
-            va="bottom",
-        )
-        axes[1].text(
-            bar.get_x() + bar.get_width() / 2,
-            0,
-            f"{train_time:.2f}s\n{epochs} epochs",
-            ha="center",
-            va="bottom",
-            color="white",
-        )
-
-    plt.tight_layout()
-    # plt.subplots_adjust(top=0.85)
-    plt.show()
+    fig.show()
 
 
 def plot_predictions(model: Model, x: np.ndarray, y: np.ndarray, indices: np.ndarray) -> None:
+    heatmap_size = 475
     cols = 5
     rows = (len(indices) + cols - 1) // cols
 
-    fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
-    fig.suptitle(create_suptitle(model.model_data))
+    subplot_titles = []
+    for index in indices:
+        image = x[index]
+        true_label = np.argmax(y[index])
+        pred_label = model.predict(image)
+        color = "#d62728" if true_label != pred_label else "#2ca02c"
+        subplot_titles.append(f'<span style="color:{color}">True: {true_label} | Pred: {pred_label}</span>')
 
-    if rows == 1:
-        axes = np.array([axes])
+    fig = make_subplots(
+        rows=rows,
+        cols=cols,
+        subplot_titles=subplot_titles,
+        horizontal_spacing=0.05,
+        vertical_spacing=0.1,
+        row_heights=[heatmap_size] * rows,
+        column_widths=[heatmap_size] * cols,
+    )
 
     for i, index in enumerate(indices):
-        row = i // cols
-        col = i % cols
-        ax = axes[row, col]
+        row = (i // cols) + 1
+        col = (i % cols) + 1
 
-        image = x[index].reshape(28, 28)
-        true_label = np.argmax(y[index])
+        image = np.flipud(x[index].reshape(28, 28))
 
-        pred_label = model.predict(x[index])
+        fig.add_trace(go.Heatmap(z=image, colorscale="Gray", showscale=False, zmin=0, zmax=1), row=row, col=col)
 
-        sns.heatmap(image, cmap="gray", cbar=False, ax=ax, square=True)
+    fig.update_xaxes(showgrid=False, showticklabels=False)
+    fig.update_yaxes(showgrid=False, showticklabels=False)
 
-        # ax.imshow(image, cmap="gray")
-        color = "red" if true_label != pred_label else "green"
-        ax.set_title(f"True: {true_label} | Pred: {pred_label}", color=color)
-        ax.axis("off")
+    fig.update_layout(
+        title_text=create_suptitle(model.model_data),
+        title=dict(
+            x=0.5,
+            y=0.98,
+            xanchor="center",
+            yanchor="top",
+            font=dict(size=20),
+        ),
+        width=heatmap_size * cols + (cols - 1) * heatmap_size * 0.05,
+        height=heatmap_size * rows + (rows - 1) * heatmap_size * 0.1 + 100,
+        showlegend=False,
+    )
 
-    plt.tight_layout()
-    plt.show()
+    fig.show()
