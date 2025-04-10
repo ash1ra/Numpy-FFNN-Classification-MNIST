@@ -12,14 +12,12 @@ OUTPUT_SIZE = 10
 EPS = 1e-15
 LOGGER_LEVEL = logging.INFO
 LOGS_DIR = Path("logs")
+LOGS_DIR.mkdir(exist_ok=True)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGER_LEVEL)
 
-formatter = logging.Formatter(
-    "%(asctime)s | %(levelname)s | %(message)s",
-    datefmt="%H:%M:%S",
-)
+formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S")
 
 log_filename = LOGS_DIR / f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
@@ -158,12 +156,19 @@ class Model:
         logger.info(f"Minimum delta: {self.model_data.min_delta}\n")
 
     def _init_params(self) -> Params:
-        w1 = np.random.randn(INPUT_SIZE, self.model_data.hidden_neurons_count) * np.sqrt(2 / INPUT_SIZE)
+        activation = self.model_data.hidden_activation_func[0]
+
+        if activation in ["ReLU", "Leaky ReLU", "ELU"]:
+            scale_w1 = np.sqrt(2 / INPUT_SIZE)
+            scale_w2 = np.sqrt(2 / self.model_data.hidden_neurons_count)
+        else:
+            scale_w1 = np.sqrt(2 / (INPUT_SIZE + self.model_data.hidden_neurons_count))
+            scale_w2 = np.sqrt(2 / (self.model_data.hidden_neurons_count + OUTPUT_SIZE))
+
+        w1 = np.random.randn(INPUT_SIZE, self.model_data.hidden_neurons_count) * scale_w1
         b1 = np.zeros((1, self.model_data.hidden_neurons_count))
 
-        w2 = np.random.randn(self.model_data.hidden_neurons_count, OUTPUT_SIZE) * np.sqrt(
-            2 / self.model_data.hidden_neurons_count
-        )
+        w2 = np.random.randn(self.model_data.hidden_neurons_count, OUTPUT_SIZE) * scale_w2
         b2 = np.zeros((1, OUTPUT_SIZE))
 
         return Params(w1=w1, b1=b1, w2=w2, b2=b2)
@@ -218,8 +223,11 @@ class Model:
         exps = np.exp(z - z.max(axis=-1, keepdims=True))
         return exps / np.sum(exps, axis=-1, keepdims=True)
 
-    def _cross_entropy(self, y: np.ndarray) -> np.float64:
-        return (-np.sum(y * np.log(self.activations.a2 + EPS))) / y.shape[0]
+    def _cross_entropy(self, y: np.ndarray, batch_size: int | None = None) -> np.float64:
+        if not batch_size:
+            batch_size = self.model_data.batch_size
+
+        return (-np.sum(y * np.log(self.activations.a2 + EPS))) / batch_size
 
     def _forward_prop(self, x: np.ndarray) -> None:
         z1 = np.matmul(x, self.params.w1) + self.params.b1
@@ -232,7 +240,8 @@ class Model:
 
     def _backward_prop(self, x: np.ndarray, y: np.ndarray) -> None:
         dz2 = self.activations.a2 - y
-        dw2 = np.matmul(dz2.T, self.activations.a1) / self.model_data.batch_size
+        dw2 = np.matmul(self.activations.a1.T, dz2) / self.model_data.batch_size
+        # dw2 = np.matmul(dz2.T, self.activations.a1) / self.model_data.batch_size
         db2 = np.sum(dz2, axis=0, keepdims=True) / self.model_data.batch_size
 
         da1 = np.matmul(self.params.w2, dz2.T)
@@ -260,15 +269,25 @@ class Model:
         self.params.b2 += self.velocities.v_b2
 
     def _nesterov(self, momentum: float = 0.9) -> None:
+        w1_prev = self.params.w1.copy()
+        b1_prev = self.params.b1.copy()
+        w2_prev = self.params.w2.copy()
+        b2_prev = self.params.b2.copy()
+
+        self.params.w1 += momentum * self.velocities.v_w1
+        self.params.b1 += momentum * self.velocities.v_b1
+        self.params.w2 += momentum * self.velocities.v_w2
+        self.params.b2 += momentum * self.velocities.v_b2
+
         self.velocities.v_w1 = momentum * self.velocities.v_w1 - self.model_data.learning_rate * self.grads.dw1
         self.velocities.v_b1 = momentum * self.velocities.v_b1 - self.model_data.learning_rate * self.grads.db1
         self.velocities.v_w2 = momentum * self.velocities.v_w2 - self.model_data.learning_rate * self.grads.dw2
         self.velocities.v_b2 = momentum * self.velocities.v_b2 - self.model_data.learning_rate * self.grads.db2
 
-        self.params.w1 += momentum * self.velocities.v_w1 - self.model_data.learning_rate * self.grads.dw1
-        self.params.b1 += momentum * self.velocities.v_b1 - self.model_data.learning_rate * self.grads.db1
-        self.params.w2 += momentum * self.velocities.v_w2 - self.model_data.learning_rate * self.grads.dw2
-        self.params.b2 += momentum * self.velocities.v_b2 - self.model_data.learning_rate * self.grads.db2
+        self.params.w1 = w1_prev + self.velocities.v_w1
+        self.params.b1 = b1_prev + self.velocities.v_b1
+        self.params.w2 = w2_prev + self.velocities.v_w2
+        self.params.b2 = b2_prev + self.velocities.v_b2
 
     def _rmsprop(self, rho: float = 0.9) -> None:
         self.cache.s_w1 = rho * self.cache.s_w1 + (1 - rho) * (np.power(self.grads.dw1, 2))
@@ -319,6 +338,7 @@ class Model:
         timer_start = perf_counter()
         train_samples_count = x_train.shape[0]
 
+        self._t = 0
         best_val_loss = float("inf")
         patience_counter = 0
         best_params = Params(
@@ -371,22 +391,22 @@ class Model:
                 f"Val loss: {val_loss:.4f} | Val acc: {(val_accuracy * 100):.2f}%"
             )
 
-            # if val_loss < best_val_loss - self.model_data.min_delta:
-            #     best_val_loss = val_loss
-            #     best_params = Params(
-            #         w1=self.params.w1.copy(),
-            #         b1=self.params.b1.copy(),
-            #         w2=self.params.w2.copy(),
-            #         b2=self.params.b2.copy(),
-            #     )
-            #     patience_counter = 0
-            # else:
-            #     patience_counter += 1
-            #     logger.info(f"No improvement in val loss for {patience_counter}/{self.model_data.patience} epochs")
-            #     if patience_counter >= self.model_data.patience:
-            #         logger.info(f"Early stopping triggered after {epoch + 1} epochs")
-            #         self.params = best_params
-            #         break
+            if val_loss < best_val_loss - self.model_data.min_delta:
+                best_val_loss = val_loss
+                best_params = Params(
+                    w1=self.params.w1.copy(),
+                    b1=self.params.b1.copy(),
+                    w2=self.params.w2.copy(),
+                    b2=self.params.b2.copy(),
+                )
+                patience_counter = 0
+            else:
+                patience_counter += 1
+                logger.info(f"No improvement in val loss for {patience_counter}/{self.model_data.patience} epochs")
+                if patience_counter >= self.model_data.patience:
+                    logger.info(f"Early stopping triggered after {epoch + 1} epochs")
+                    self.params = best_params
+                    break
 
         self.model_data.train_time = perf_counter() - timer_start
 
@@ -431,7 +451,6 @@ class Model:
         for i in range(count):
             logger.info(f"Run {i + 1}/{count}")
 
-            self._t = 0
             self.params = self._init_params()
 
             if self.model_data.optimizer in ["momentum", "nesterov", "adam"]:
@@ -499,3 +518,27 @@ class Model:
         logger.info(f"Validation accuracy: {(avg_val_accuracy[-1] * 100):.2f}% (last epoch)")
         logger.info(f"Test loss: {avg_test_loss:.4f}")
         logger.info(f"Test accuracy: {(avg_test_accuracy * 100):.2f}%\n")
+
+    def save_model(self, filepath: str | Path) -> None:
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+
+        arrays_to_save = {
+            "w1": self.params.w1,
+            "b1": self.params.b1,
+            "w2": self.params.w2,
+            "b2": self.params.b2,
+        }
+
+        np.savez(filepath.with_suffix(".npz"), **arrays_to_save)
+
+    def load_model(self, filepath: str | Path) -> None:
+        filepath = Path(filepath)
+
+        arrays = np.load(filepath.with_suffix(".npz"))
+        self.params = Params(
+            w1=arrays["w1"],
+            b1=arrays["b1"],
+            w2=arrays["w2"],
+            b2=arrays["b2"],
+        )
