@@ -145,7 +145,7 @@ def plot_test_loss_and_accuracy(models_data: list[ModelData], comparable_attr: s
         rows=1, cols=2, subplot_titles=("Test loss (less is better)", "Test accuracy (greater is better)")
     )
 
-    x_labels = [create_comparable_label(model_data, comparable_attr) for model_data in models_data]
+    x_labels = [str(create_comparable_label(model_data, comparable_attr)) for model_data in models_data]
 
     test_losses = [model_data.test_loss for model_data in models_data]
     test_accuracies = [model_data.test_accuracy for model_data in models_data]
@@ -160,6 +160,8 @@ def plot_test_loss_and_accuracy(models_data: list[ModelData], comparable_attr: s
                 f"Loss: {loss:.2f}<br>Train time: {time:.2f}s<br>Train epochs: {epochs}"
                 for loss, time, epochs in zip(test_losses, train_times, epochs)
             ],
+            textposition="inside",
+            textangle=0,
             textfont=dict(size=16),
         ),
         row=1,
@@ -174,6 +176,8 @@ def plot_test_loss_and_accuracy(models_data: list[ModelData], comparable_attr: s
                 f"Accuracy: {acc * 100:.2f}%<br>Train time: {time:.2f}s<br>Train epochs: {epochs}"
                 for acc, time, epochs in zip(test_accuracies, train_times, epochs)
             ],
+            textposition="inside",
+            textangle=0,
             textfont=dict(size=16),
         ),
         row=1,
