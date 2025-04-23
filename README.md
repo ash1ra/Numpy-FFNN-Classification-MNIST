@@ -45,11 +45,13 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | Gradient Descent | 27.04s     | 250.0  | 2.88      | 90.00%        |
 | Momentum         | 26.88s     | 250.0  | 2.01      | 92.80%        |
 | Nesterov         | 28.34s     | 250.0  | 2.01      | 92.83%        |
-| RMRprop          | 6.72s      | 55.9   | 1.89      | 93.38%        |
+| RMSprop          | 6.72s      | 55.9   | 1.89      | 93.38%        |
 | Adam             | 7.14s      | 55.6   | 1.84      | 93.38%        |
 
 **Conclusions:**  
-...
+Best train time: RMSprop  
+Best test accuracy: RMSprop and Adam  
+Optimal options: RMRprop or Adam  
 
 ### 2. Optimizers (`learning_rate = 0.0001` with early stopping)
 ![Optimizers with learning_rate = 0.0001 with early stopping](images/optimizers_lr0001_train.png)
@@ -60,11 +62,13 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | Gradient Descent | 25.83s     | 250.0  | 8.30      | 74.02%        |
 | Momentum         | 25.76s     | 250.0  | 2.89      | 90.17%        |
 | Nesterov         | 27.85s     | 250.0  | 2.91      | 90.08%        |
-| RMRprop          | 30.13s     | 250.0  | 1.90      | 93.04%        |
+| RMSprop          | 30.13s     | 250.0  | 1.90      | 93.04%        |
 | Adam             | 31.93s     | 247.1  | 1.88      | 93.37%        |
 
 **Conclusions:**  
-...
+Best train time: Momentum  
+Best test accuracy: Adam  
+Optimal options: RMSprop or Adam  
 
 ### 3. Hidden Layer Activation Functions (Nesterov with early stopping)
 ![Nesterov training with early stopping](images/act_func_nesterov_train_w_early_stopping.png)
@@ -79,7 +83,9 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | ELU                 | 4.70s      | 34.0   | 1.79      | 93.43%        |
 
 **Conclusions:**  
-...
+Best train time: tanh  
+Best test accuracy: ELU  
+Optimal options: tanh or ELU  
 
 ### 4. Hidden Layer Activation Functions (Adam with early stopping)
 ![Adam training with early stopping](images/act_func_adam_train_w_early_stopping.png)
@@ -91,10 +97,12 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | tanh                | 6.28s      | 53.7   | 1.92      | 92.91%        |
 | ReLU                | 6.01s      | 53.0   | 1.92      | 93.17%        |
 | Leaky ReLU          | 6.00s      | 55.4   | 1.91      | 93.29%        |
-| ELU                 | 7.33s      | 64     | 1.84      | 93.49%        |
+| ELU                 | 7.33s      | 64.0   | 1.84      | 93.49%        |
 
 **Conclusions:**  
-...
+Best train time: ReLU and Leaky ReLU  
+Best test accuracy: ELU  
+Optimal options: ReLU and Leaky ReLU  
 
 ### 5. Learning rate (Nesterov without early stopping)
 ![Learning rate for Nesterov training without early stopping](images/lr_nesterov_train_wo_early_stopping.png)
@@ -105,11 +113,13 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | 0.00001       | 28.59s     | 250.0  | 7.97      | 75.63%        |
 | 0.0001        | 27.93s     | 250.0  | 2.90      | 90.00%        |
 | 0.001         | 27.98s     | 250.0  | 2.00      | 92.88%        |
-| 0.01          | 28.18s     | 250.s  | 1.95      | 93.23%        |
+| 0.01          | 28.18s     | 250.0  | 1.95      | 93.23%        |
 | 0.05          | 25.97s     | 250.0  | 2.61      | 92.87%        |
 
 **Conclusions:**  
-...
+Best train time: 0.05  
+Best test accuracy: 0.01  
+Optimal option: 0.01  
 
 ### 6. Learning rate (Nesterov with early stopping)
 ![Learning rate for Nesterov training with early stopping](images/lr_nesterov_train_w_early_stopping.png)
@@ -124,7 +134,9 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | 0.05          | 4.29s      | 32.6   | 1.78      | 93.54%        |
 
 **Conclusions:**  
-...
+Best train time: 0.05  
+Best test accuracy: 0.05  
+Optimal option: 0.05  
 
 ### 7. Learning rate (Adam without early stopping)
 ![Learning rate for Adam training without early stopping](images/lr_adam_train_wo_early_stopping.png)
@@ -139,7 +151,9 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | 0.05          | 31.03s     | 250.0  | 5.98      | 90.54%        |
 
 **Conclusions:**  
-...
+Best train time: 0.00001  
+Best test accuracy: 0.0001  
+Optimal option: 0.0001  
 
 ### 8. Learning rate (Adam with early stopping)
 ![Learning rate for Adam training with early stopping](images/lr_adam_train_w_early_stopping.png)
@@ -154,7 +168,9 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | 0.05          | 2.03       | 16.5   | 2.26      | 92.30%        |
 
 **Conclusions:**  
-...
+Best train time: 0.05  
+Best test accuracy: 0.01  
+Optimal options: 0.01  
 
 ### 9. Hidden layer neurons count (Nesterov with early stopping)
 ![Hidden layer neurons count for Nesterov training with early stopping](images/neurons_nesterov_train_w_early_stopping.png)
@@ -169,7 +185,9 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | 100                  | 11.77s     | 35.7   | 0.67      | 97.72%        |
 
 **Conclusions:**  
-...
+Best train time: 10  
+Best test accuracy: 100  
+Optimal option: 10  
 
 ### 10. Hidden layer neurons count (Adam with early stopping)
 ![Hidden layer neurons count for Adam training with early stopping](images/neurons_adam_train_w_early_stopping.png)
@@ -184,7 +202,9 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | 100                  | 13.12s     | 36.7   | 0.74      | 97.48%        |
 
 **Conclusions:**  
-...
+Best train time: 10  
+Best test accuracy: 100  
+Optimal options: 50  
 
 ### 11. Batch size (Nesterov with early stopping)
 ![Batch size for Nesterov training with early stopping](images/batch_size_nesterov_train_w_early_stopping.png)
@@ -199,7 +219,9 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | 1000       | 6.64s      | 73.2   | 0.46      | 93.38%        |
 
 **Conclusions:**  
-...
+Best train time: 100  
+Best test accuracy: 250  
+Optimal options: 250  
 
 
 ### 12. Batch size (Adam with early stopping)
@@ -215,4 +237,6 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | 1000       | 10.72s     | 117.6  | 0.47      | 93.36%        |
 
 **Conclusions:**  
-...
+Best train time: 100  
+Best test accuracy: 250  
+Optimal options: 100  
