@@ -240,3 +240,58 @@ Optimal options: 250
 Best train time: 100  
 Best test accuracy: 250  
 Optimal options: 100  
+
+## Setting Up and Running the Project
+### Using pip
+1. Clone the repository:
+```bash
+git clone https://github.com/ash1rawtf/numpy-ffnn-classification-mnist.git
+cd numpy-ffnn-classification-mnist
+```
+
+2. Create and activate a virtual environment:
+```bash
+python -m venv .venv
+# On Windows
+.venv\Scripts\activate
+# On Unix or MacOS
+source .venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Run the model:  
+Create and customize the desired model in the `main.py` file and then run it.  
+```bash
+python main.py
+```
+
+### Using uv
+1. Clone the repository:
+```bash
+git clone https://github.com/ash1rawtf/numpy-ffnn-classification-mnist.git
+cd numpy-ffnn-classification-mnist
+```
+
+2. Create and activate a virtual environment:
+```bash
+uv venv
+# On Windows
+.venv\Scripts\activate
+# On Unix or MacOS
+source .venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
+uv sync
+```
+
+4. Run the model:
+Create and customize the desired model in the `main.py` file and then run it.  
+```bash
+python main.py
+```
