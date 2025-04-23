@@ -34,19 +34,19 @@ The MNIST dataset is loaded from `data/train.csv`, contain 10 samples and split 
 Pixel values are normalized to [0, 1] by dividing by 255. Labels are one-hot encoded for training.
 
 ## Investigating Parameter Effects on Model Performance
-Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 0.0001` respectively. All other tests use Nesterov optimizer as a demonstration of a simpler solution and Adam as one of the best algorithms. All model parameters are shown at the top of the images. The first image shows the result of model training and validation, and the second image shows the result of testing.
+Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 0.0001` respectively. All other tests use Nesterov optimizer as a demonstration of a simpler solution and Adam as one of the best algorithms. All model parameters are shown at the top of the images. The first image shows the result of model training and validation, and the second image shows the result of testing. The results of model training and testing are averages over 10 full stages of model training and testing.
 
 ### 1. Optimizers (`learning_rate = 0.001` with early stopping)
 ![Optimizers with learning_rate = 0.001 with early stopping](images/optimizers_lr001_train.png)
 ![Optimizers with learning_rate = 0.001 with early stopping](images/optimizers_lr001_test.png)
 
-| Activation function | Train time | Epochs | Test loss | Test accuracy |
-|---------------------|------------|--------|-----------|---------------|
-| Gradient Descent    | 27.04s     | 250    | 2.88      | 90.00%        |
-| Momentum            | 26.88s     | 250    | 2.01      | 92.80%        |
-| Nesterov            | 28.34s     | 250    | 2.01      | 92.83%        |
-| RMRprop             | 6.72s      | 55.9   | 1.89      | 93.38%        |
-| Adam                | 7.14s      | 55.6   | 1.84      | 93.38%        |
+| Optimizer        | Train time | Epochs | Test loss | Test accuracy |
+|------------------|------------|--------|-----------|---------------|
+| Gradient Descent | 27.04s     | 250.0  | 2.88      | 90.00%        |
+| Momentum         | 26.88s     | 250.0  | 2.01      | 92.80%        |
+| Nesterov         | 28.34s     | 250.0  | 2.01      | 92.83%        |
+| RMRprop          | 6.72s      | 55.9   | 1.89      | 93.38%        |
+| Adam             | 7.14s      | 55.6   | 1.84      | 93.38%        |
 
 **Conclusions:**  
 ...
@@ -55,13 +55,13 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 ![Optimizers with learning_rate = 0.0001 with early stopping](images/optimizers_lr0001_train.png)
 ![Optimizers with learning_rate = 0.0001 with early stopping](images/optimizers_lr0001_test.png)
 
-| Activation function | Train time | Epochs | Test loss | Test accuracy |
-|---------------------|------------|---------|-----------|---------------|
-| Gradient Descent    | 25.83s     | 250     | 8.30      | 74.02%        |
-| Momentum            | 25.76s     | 250     | 2.89      | 90.17%        |
-| Nesterov            | 27.85s     | 250     | 2.91      | 90.08%        |
-| RMRprop             | 30.13s     | 250     | 1.90      | 93.04%        |
-| Adam                | 31.93s     | 247.1   | 1.88      | 93.37%        |
+| Optimizer        | Train time | Epochs | Test loss | Test accuracy |
+|------------------|------------|--------|-----------|---------------|
+| Gradient Descent | 25.83s     | 250.0  | 8.30      | 74.02%        |
+| Momentum         | 25.76s     | 250.0  | 2.89      | 90.17%        |
+| Nesterov         | 27.85s     | 250.0  | 2.91      | 90.08%        |
+| RMRprop          | 30.13s     | 250.0  | 1.90      | 93.04%        |
+| Adam             | 31.93s     | 247.1  | 1.88      | 93.37%        |
 
 **Conclusions:**  
 ...
@@ -72,11 +72,11 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 
 | Activation function | Train time | Epochs | Test loss | Test accuracy |
 |---------------------|------------|--------|-----------|---------------|
-| Sigmoid             | 0          | 0      | 0         | 0             |
-| tanh                | 0          | 0      | 0         | 0             |
-| ReLU                | 0          | 0      | 0         | 0             |
-| Leaky ReLU          | 0          | 0      | 0         | 0             |
-| ELU                 | 0          | 0      | 0         | 0             |
+| Sigmoid             | 8.57s      | 62.9   | 1.91      | 92.97%        |
+| tanh                | 3.86s      | 27.7   | 1.96      | 92.79%        |
+| ReLU                | 4.73s      | 35.7   | 2.11      | 92.43%        |
+| Leaky ReLU          | 4.87s      | 37.7   | 1.97      | 93.03%        |
+| ELU                 | 4.70s      | 34.0   | 1.79      | 93.43%        |
 
 **Conclusions:**  
 ...
@@ -87,11 +87,132 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 
 | Activation function | Train time | Epochs | Test loss | Test accuracy |
 |---------------------|------------|--------|-----------|---------------|
-| Sigmoid             | 0          | 0      | 0         | 0             |
-| tanh                | 0          | 0      | 0         | 0             |
-| ReLU                | 0          | 0      | 0         | 0             |
-| Leaky ReLU          | 0          | 0      | 0         | 0             |
-| ELU                 | 0          | 0      | 0         | 0             |
+| Sigmoid             | 10.46s     | 89.6   | 1.96      | 92.72%        |
+| tanh                | 6.28s      | 53.7   | 1.92      | 92.91%        |
+| ReLU                | 6.01s      | 53.0   | 1.92      | 93.17%        |
+| Leaky ReLU          | 6.00s      | 55.4   | 1.91      | 93.29%        |
+| ELU                 | 7.33s      | 64     | 1.84      | 93.49%        |
+
+**Conclusions:**  
+...
+
+### 5. Learning rate (Nesterov without early stopping)
+![Learning rate for Nesterov training without early stopping](images/lr_nesterov_train_wo_early_stopping.png)
+![Learning rate for Nesterov testing without early stopping](images/lr_nesterov_test_wo_early_stopping.png)
+
+| Learning rate | Train time | Epochs | Test loss | Test accuracy |
+|---------------|------------|--------|-----------|---------------|
+| 0.00001       | 28.59s     | 250.0  | 7.97      | 75.63%        |
+| 0.0001        | 27.93s     | 250.0  | 2.90      | 90.00%        |
+| 0.001         | 27.98s     | 250.0  | 2.00      | 92.88%        |
+| 0.01          | 28.18s     | 250.s  | 1.95      | 93.23%        |
+| 0.05          | 25.97s     | 250.0  | 2.61      | 92.87%        |
+
+**Conclusions:**  
+...
+
+### 6. Learning rate (Nesterov with early stopping)
+![Learning rate for Nesterov training with early stopping](images/lr_nesterov_train_w_early_stopping.png)
+![Learning rate for Nesterov testing with early stopping](images/lr_nesterov_test_w_early_stopping.png)
+
+| Learning rate | Train time | Epochs | Test loss | Test accuracy |
+|---------------|------------|--------|-----------|---------------|
+| 0.00001       | 27.01s     | 250.0  | 7.85      | 75.17%        |
+| 0.0001        | 30.38s     | 250.0  | 2.92      | 89.97%        |
+| 0.001         | 30.50s     | 250.0  | 1.98      | 92.93%        |
+| 0.01          | 9.37s      | 73.1   | 1.84      | 93.35%        |
+| 0.05          | 4.29s      | 32.6   | 1.78      | 93.54%        |
+
+**Conclusions:**  
+...
+
+### 7. Learning rate (Adam without early stopping)
+![Learning rate for Adam training without early stopping](images/lr_adam_train_wo_early_stopping.png)
+![Learning rate for Adam testing without early stopping](images/lr_adam_test_wo_early_stopping.png)
+
+| Learning rate | Train time | Epochs | Test loss | Test accuracy |
+|---------------|------------|--------|-----------|---------------|
+| 0.00001       | 27.43s     | 250.0  | 3.03      | 89.76%        |
+| 0.0001        | 29.12s     | 250.0  | 1.91      | 93.15%        |
+| 0.001         | 29.98s     | 250.0  | 2.53      | 92.54%        |
+| 0.01          | 29.59s     | 250.0  | 4.55      | 91.99%        |
+| 0.05          | 31.03s     | 250.0  | 5.98      | 90.54%        |
+
+**Conclusions:**  
+...
+
+### 8. Learning rate (Adam with early stopping)
+![Learning rate for Adam training with early stopping](images/lr_adam_train_w_early_stopping.png)
+![Learning rate for Adam testing with early stopping](images/lr_adam_test_w_early_stopping.png)
+
+| Learning rate | Train time | Epochs | Test loss | Test accuracy |
+|---------------|------------|--------|-----------|---------------|
+| 0.00001       | 31.33s     | 250.0  | 2.90      | 90.14%        |
+| 0.0001        | 30.66s     | 250.0  | 1.84      | 93.32%        |
+| 0.001         | 6.69s      | 57.0   | 1.89      | 93.28%        |
+| 0.01          | 2.69s      | 21.9   | 1.90      | 93.38%        |
+| 0.05          | 2.03       | 16.5   | 2.26      | 92.30%        |
+
+**Conclusions:**  
+...
+
+### 9. Hidden layer neurons count (Nesterov with early stopping)
+![Hidden layer neurons count for Nesterov training with early stopping](images/neurons_nesterov_train_w_early_stopping.png)
+![Hidden layer neurons count for Nesterov testing with early stopping](images/neurons_nesterov_test_w_early_stopping.png)
+
+| Hidden neurons count | Train time | Epochs | Test loss | Test accuracy |
+|----------------------|------------|--------|-----------|---------------|
+| 5                    | 3.62s      | 36.1   | 2.89      | 89.89%        |
+| 10                   | 3.43s      | 30.6   | 1.81      | 93.47%        |
+| 25                   | 5.08s      | 32.6   | 1.02      | 96.33%        |
+| 50                   | 6.96s      | 34.0   | 0.77      | 97.32%        |
+| 100                  | 11.77s     | 35.7   | 0.67      | 97.72%        |
+
+**Conclusions:**  
+...
+
+### 10. Hidden layer neurons count (Adam with early stopping)
+![Hidden layer neurons count for Adam training with early stopping](images/neurons_adam_train_w_early_stopping.png)
+![Hidden layer neurons count for Adam testing with early stopping](images/neurons_adam_test_w_early_stopping.png)
+
+| Hidden neurons count | Train time | Epochs | Test loss | Test accuracy |
+|----------------------|------------|--------|-----------|---------------|
+| 5                    | 8.89s      | 86.0   | 2.88      | 90.00%        |
+| 10                   | 6.87s      | 59.3   | 1.82      | 93.49%        |
+| 25                   | 8.16s      | 50.1   | 1.11      | 95.91%        |
+| 50                   | 9.64s      | 42.2   | 0.87      | 96.84%        |
+| 100                  | 13.12s     | 36.7   | 0.74      | 97.48%        |
+
+**Conclusions:**  
+...
+
+### 11. Batch size (Nesterov with early stopping)
+![Batch size for Nesterov training with early stopping](images/batch_size_nesterov_train_w_early_stopping.png)
+![Batch size for Nesterov testing with early stopping](images/batch_size_nesterov_test_w_early_stopping.png)
+
+| Batch size | Train time | Epochs | Test loss | Test accuracy |
+|------------|------------|--------|-----------|---------------|
+| 50         | 3.83s      | 21.3   | 9.59      | 93.37%        |
+| 100        | 3.32s      | 24.4   | 4.53      | 93.73%        |
+| 250        | 3.67s      | 34.7   | 1.74      | 93.94%        |
+| 500        | 4.64s      | 47.7   | 0.90      | 93.58%        |
+| 1000       | 6.64s      | 73.2   | 0.46      | 93.38%        |
+
+**Conclusions:**  
+...
+
+
+### 12. Batch size (Adam with early stopping)
+![Batch size for Adam training with early stopping](images/batch_size_adam_train_w_early_stopping.png)
+![Batch size for Adam testing with early stopping](images/batch_size_adam_test_w_early_stopping.png)
+
+| Batch size | Train time | Epochs | Test loss | Test accuracy |
+|------------|------------|--------|-----------|---------------|
+| 50         | 7.02s      | 33.5   | 9.13      | 93.38%        |
+| 100        | 5.81s      | 38.9   | 4.72      | 93.25%        |
+| 250        | 6.92s      | 59.6   | 1.84      | 93.49%        |
+| 500        | 8.24s      | 81.9   | 0.92      | 93.36%        |
+| 1000       | 10.72s     | 117.6  | 0.47      | 93.36%        |
 
 **Conclusions:**  
 ...
