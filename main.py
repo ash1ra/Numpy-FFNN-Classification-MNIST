@@ -63,31 +63,29 @@ def test_models(
 def main() -> None:
     x_train, y_train, x_val, y_val, x_test, y_test = get_data()
 
-    model = Model(
-        hidden_neurons_count=50,
+    model_w_nesterov = Model(
+        hidden_neurons_count=25,
         hidden_activation_func="elu",
         optimizer="nesterov",
         learning_rate=0.05,
         epochs=250,
         batch_size=250,
     )
-    model.train_model(x_train, y_train, x_val, y_val)
-    model.test_model(x_test, y_test)
+    model_w_nesterov.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 10)
 
-    plots.plot_predictions(model, x_test, y_test, np.random.randint(0, x_test.shape[-1], 20))
+    plots.plot_predictions(model_w_nesterov, x_test, y_test, np.random.randint(0, x_test.shape[-1], 10))
 
-    model1 = Model(
-        hidden_neurons_count=100,
-        hidden_activation_func="elu",
-        optimizer="adam",
-        learning_rate=0.001,
-        epochs=250,
-        batch_size=250,
-    )
-    model1.train_model(x_train, y_train, x_val, y_val)
-    model1.test_model(x_test, y_test)
-
-    plots.plot_predictions(model1, x_test, y_test, np.random.randint(0, x_test.shape[-1], 20))
+    # model_w_adam = Model(
+    #     hidden_neurons_count=50,
+    #     hidden_activation_func="elu",
+    #     optimizer="adam",
+    #     learning_rate=0.01,
+    #     epochs=250,
+    #     batch_size=100,
+    # )
+    # model_w_adam.calc_avarage(x_train, y_train, x_val, y_val, x_test, y_test, 10)
+    #
+    # plots.plot_predictions(model_w_adam, x_test, y_test, np.random.randint(0, x_test.shape[-1], 10))
 
     # models_data = test_models(
     #     (x_train, y_train, x_val, y_val, x_test, y_test, 10),
