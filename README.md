@@ -48,11 +48,6 @@ Optimizer tests are conducted with `learning_rate = 0.001` and `learning_rate = 
 | RMSprop          | 6.72s      | 55.9   | 1.89      | 93.38%        |
 | Adam             | 7.14s      | 55.6   | 1.84      | 93.38%        |
 
-**Conclusions:**  
-Best train time: RMSprop  
-Best test accuracy: RMSprop and Adam  
-Optimal options: RMRprop or Adam  
-
 ### 2. Optimizers (`learning_rate = 0.0001` with early stopping)
 ![Optimizers with learning_rate = 0.0001 with early stopping](images/optimizers_lr0001_train.png)
 ![Optimizers with learning_rate = 0.0001 with early stopping](images/optimizers_lr0001_test.png)
@@ -64,11 +59,6 @@ Optimal options: RMRprop or Adam
 | Nesterov         | 27.85s     | 250.0  | 2.91      | 90.08%        |
 | RMSprop          | 30.13s     | 250.0  | 1.90      | 93.04%        |
 | Adam             | 31.93s     | 247.1  | 1.88      | 93.37%        |
-
-**Conclusions:**  
-Best train time: Momentum  
-Best test accuracy: Adam  
-Optimal options: RMSprop or Adam  
 
 ### 3. Hidden Layer Activation Functions (Nesterov with early stopping)
 ![Nesterov training with early stopping](images/act_func_nesterov_train_w_early_stopping.png)
@@ -82,11 +72,6 @@ Optimal options: RMSprop or Adam
 | Leaky ReLU          | 4.87s      | 37.7   | 1.97      | 93.03%        |
 | ELU                 | 4.70s      | 34.0   | 1.79      | 93.43%        |
 
-**Conclusions:**  
-Best train time: tanh  
-Best test accuracy: ELU  
-Optimal options: tanh or ELU  
-
 ### 4. Hidden Layer Activation Functions (Adam with early stopping)
 ![Adam training with early stopping](images/act_func_adam_train_w_early_stopping.png)
 ![Adam testing with early stopping](images/act_func_adam_test_w_early_stopping.png)
@@ -98,11 +83,6 @@ Optimal options: tanh or ELU
 | ReLU                | 6.01s      | 53.0   | 1.92      | 93.17%        |
 | Leaky ReLU          | 6.00s      | 55.4   | 1.91      | 93.29%        |
 | ELU                 | 7.33s      | 64.0   | 1.84      | 93.49%        |
-
-**Conclusions:**  
-Best train time: ReLU and Leaky ReLU  
-Best test accuracy: ELU  
-Optimal options: ReLU and Leaky ReLU  
 
 ### 5. Learning rate (Nesterov without early stopping)
 ![Learning rate for Nesterov training without early stopping](images/lr_nesterov_train_wo_early_stopping.png)
@@ -116,11 +96,6 @@ Optimal options: ReLU and Leaky ReLU
 | 0.01          | 28.18s     | 250.0  | 1.95      | 93.23%        |
 | 0.05          | 25.97s     | 250.0  | 2.61      | 92.87%        |
 
-**Conclusions:**  
-Best train time: 0.05  
-Best test accuracy: 0.01  
-Optimal option: 0.01  
-
 ### 6. Learning rate (Nesterov with early stopping)
 ![Learning rate for Nesterov training with early stopping](images/lr_nesterov_train_w_early_stopping.png)
 ![Learning rate for Nesterov testing with early stopping](images/lr_nesterov_test_w_early_stopping.png)
@@ -132,11 +107,6 @@ Optimal option: 0.01
 | 0.001         | 30.50s     | 250.0  | 1.98      | 92.93%        |
 | 0.01          | 9.37s      | 73.1   | 1.84      | 93.35%        |
 | 0.05          | 4.29s      | 32.6   | 1.78      | 93.54%        |
-
-**Conclusions:**  
-Best train time: 0.05  
-Best test accuracy: 0.05  
-Optimal option: 0.05  
 
 ### 7. Learning rate (Adam without early stopping)
 ![Learning rate for Adam training without early stopping](images/lr_adam_train_wo_early_stopping.png)
@@ -150,11 +120,6 @@ Optimal option: 0.05
 | 0.01          | 29.59s     | 250.0  | 4.55      | 91.99%        |
 | 0.05          | 31.03s     | 250.0  | 5.98      | 90.54%        |
 
-**Conclusions:**  
-Best train time: 0.00001  
-Best test accuracy: 0.0001  
-Optimal option: 0.0001  
-
 ### 8. Learning rate (Adam with early stopping)
 ![Learning rate for Adam training with early stopping](images/lr_adam_train_w_early_stopping.png)
 ![Learning rate for Adam testing with early stopping](images/lr_adam_test_w_early_stopping.png)
@@ -166,11 +131,6 @@ Optimal option: 0.0001
 | 0.001         | 6.69s      | 57.0   | 1.89      | 93.28%        |
 | 0.01          | 2.69s      | 21.9   | 1.90      | 93.38%        |
 | 0.05          | 2.03       | 16.5   | 2.26      | 92.30%        |
-
-**Conclusions:**  
-Best train time: 0.05  
-Best test accuracy: 0.01  
-Optimal options: 0.01  
 
 ### 9. Hidden layer neurons count (Nesterov with early stopping)
 ![Hidden layer neurons count for Nesterov training with early stopping](images/neurons_nesterov_train_w_early_stopping.png)
@@ -184,11 +144,6 @@ Optimal options: 0.01
 | 50                   | 6.96s      | 34.0   | 0.77      | 97.32%        |
 | 100                  | 11.77s     | 35.7   | 0.67      | 97.72%        |
 
-**Conclusions:**  
-Best train time: 10  
-Best test accuracy: 100  
-Optimal option: 10  
-
 ### 10. Hidden layer neurons count (Adam with early stopping)
 ![Hidden layer neurons count for Adam training with early stopping](images/neurons_adam_train_w_early_stopping.png)
 ![Hidden layer neurons count for Adam testing with early stopping](images/neurons_adam_test_w_early_stopping.png)
@@ -200,11 +155,6 @@ Optimal option: 10
 | 25                   | 8.16s      | 50.1   | 1.11      | 95.91%        |
 | 50                   | 9.64s      | 42.2   | 0.87      | 96.84%        |
 | 100                  | 13.12s     | 36.7   | 0.74      | 97.48%        |
-
-**Conclusions:**  
-Best train time: 10  
-Best test accuracy: 100  
-Optimal options: 50  
 
 ### 11. Batch size (Nesterov with early stopping)
 ![Batch size for Nesterov training with early stopping](images/batch_size_nesterov_train_w_early_stopping.png)
@@ -218,12 +168,6 @@ Optimal options: 50
 | 500        | 4.64s      | 47.7   | 0.90      | 93.58%        |
 | 1000       | 6.64s      | 73.2   | 0.46      | 93.38%        |
 
-**Conclusions:**  
-Best train time: 100  
-Best test accuracy: 250  
-Optimal options: 250  
-
-
 ### 12. Batch size (Adam with early stopping)
 ![Batch size for Adam training with early stopping](images/batch_size_adam_train_w_early_stopping.png)
 ![Batch size for Adam testing with early stopping](images/batch_size_adam_test_w_early_stopping.png)
@@ -236,10 +180,50 @@ Optimal options: 250
 | 500        | 8.24s      | 81.9   | 0.92      | 93.36%        |
 | 1000       | 10.72s     | 117.6  | 0.47      | 93.36%        |
 
-**Conclusions:**  
-Best train time: 100  
-Best test accuracy: 250  
-Optimal options: 100  
+## Optimal models parameters
+It is possible to choose the values of the model parameters for a long time, but I decided to stop on a compromise between the learning speed and test accuracy.  
+### 1. Using Nesterov optimizer
+- Hidden neurons count: 25,
+- Hidden activation function: ELU,
+- Learning rate: 0.05,
+- Batch size: 250.  
+
+**Results:**
+```
+11:08:23 | INFO | Average results over 10 runs:
+11:08:23 | INFO | Train time: 4.08s | Train epochs: 30.0 | Train time per epoch: 0.10s
+11:08:23 | INFO | Train loss: 0.0379 (last epoch)
+11:08:23 | INFO | Train accuracy: 98.92% (last epoch)
+11:08:23 | INFO | Validation loss: 3.7731 (last epoch)
+11:08:23 | INFO | Validation accuracy: 96.08% (last epoch)
+11:08:23 | INFO | Test loss: 1.0131
+11:08:23 | INFO | Test accuracy: 96.20%
+```
+
+![Model predictions using Nesterov optimizer with selected parameters](images/best_nesterov_predictions.png)
+
+### 2. Using Adam optimizer
+- Hidden neurons count: 50,
+- Hidden activation function: ELU,
+- Learning rate: 0.01,
+- Batch size: 100.  
+
+**Results:**
+```
+10:58:06 | INFO | Average results over 10 runs:
+10:58:06 | INFO | Train time: 4.42s | Train epochs: 14.0 | Train time per epoch: 0.28s
+10:58:06 | INFO | Train loss: 0.0538 (last epoch)
+10:58:06 | INFO | Train accuracy: 98.54% (last epoch)
+10:58:06 | INFO | Validation loss: 16.3763 (last epoch)
+10:58:06 | INFO | Validation accuracy: 96.18% (last epoch)
+10:58:06 | INFO | Test loss: 2.5020
+10:58:06 | INFO | Test accuracy: 96.40%
+```
+
+![Model predictions using Adam optimizer with selected parameters](images/best_adam_predictions.png)
+
+## Conclusions
+To summarize, I would like to say that I am convinced that firstly, the parameters of the model depend largely on the task at hand, and secondly, model tuning is a very delicate matter in which it is necessary to achieve a compromise between training time and accuracy.  
 
 ## Setting Up and Running the Project
 ### Using pip
